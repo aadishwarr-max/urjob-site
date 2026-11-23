@@ -1,0 +1,1862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f5f5f7">
+<title>urjob</title>
+<script>document.documentElement.classList.add('js');</script>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.86.0/dist/umd/supabase.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.13.0/mammoth.browser.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/docx@9.5.1/dist/index.iife.js"></script>
+<style>
+  :root{
+    --bg:#f5f5f7;
+    --ink:#1d1d1f;
+    --muted:#6e6e73;
+    --soft:#86868b;
+    --navy:#0b1f4d;
+    --blue:#2563eb;
+    --indigo:#4f46e5;
+    --violet:#7c3aed;
+    --grad:linear-gradient(135deg,#1e3a8a 0%,#2563eb 40%,#4f46e5 70%,#7c3aed 100%);
+    --grad-text:linear-gradient(90deg,#0b1f4d 0%,#2563eb 25%,#7c3aed 50%,#2563eb 75%,#0b1f4d 100%);
+    --ease-out:cubic-bezier(.16,1,.3,1);
+    --ease-io:cubic-bezier(.65,0,.35,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{overflow-x:hidden;-webkit-text-size-adjust:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue",Inter,"Segoe UI",Roboto,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    font-size:18px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    min-height:100vh;
+  }
+  body.intro-on{overflow:hidden}
+
+  /* ---------- ambient background ---------- */
+  .ambient{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+  .blob{position:absolute;border-radius:50%;filter:blur(70px);opacity:.55}
+  .blob.b1{width:520px;height:520px;left:-160px;top:-140px;background:radial-gradient(circle,#93c5fd 0%,transparent 68%);animation:float1 22s ease-in-out infinite alternate}
+  .blob.b2{width:560px;height:560px;right:-200px;top:80px;background:radial-gradient(circle,#c4b5fd 0%,transparent 68%);animation:float2 26s ease-in-out infinite alternate}
+  .blob.b3{width:480px;height:480px;left:20%;top:55%;background:radial-gradient(circle,#a5b4fc 0%,transparent 68%);opacity:.35;animation:float3 30s ease-in-out infinite alternate}
+  @keyframes float1{to{transform:translate(120px,90px) scale(1.15)}}
+  @keyframes float2{to{transform:translate(-110px,140px) scale(.9)}}
+  @keyframes float3{to{transform:translate(-80px,-120px) scale(1.1)}}
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    position:sticky;top:0;z-index:20;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:12px max(20px,env(safe-area-inset-left));
+    background:rgba(245,245,247,.7);
+    backdrop-filter:saturate(180%) blur(20px);
+    -webkit-backdrop-filter:saturate(180%) blur(20px);
+    border-bottom:1px solid rgba(0,0,0,.06);
+  }
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:19px;letter-spacing:-.02em;color:var(--ink)}
+  .brand svg{width:28px;height:28px;border-radius:8px;box-shadow:0 4px 12px rgba(79,70,229,.3)}
+  .version{
+    font-size:13px;font-weight:600;color:var(--indigo);letter-spacing:.01em;
+    padding:5px 12px;border-radius:999px;
+    background:linear-gradient(135deg,rgba(37,99,235,.10),rgba(124,58,237,.12));
+    border:1px solid rgba(79,70,229,.18);
+  }
+
+  main{max-width:780px;margin:0 auto;padding:0 20px 72px}
+
+  /* ---------- hero ---------- */
+  .hero{text-align:center;padding:64px 0 40px;display:flex;flex-direction:column;align-items:center}
+  .hero-logo{width:84px;height:84px;border-radius:24px;box-shadow:0 18px 40px -10px rgba(79,70,229,.55),0 2px 6px rgba(11,31,77,.12)}
+  .hero-logo-wrap{animation:bob 6s ease-in-out infinite}
+  @keyframes bob{50%{transform:translateY(-6px)}}
+  .eyebrow{
+    margin-top:26px;display:inline-flex;align-items:center;gap:8px;
+    font-size:14px;font-weight:600;color:var(--indigo);
+    padding:7px 14px;border-radius:999px;background:rgba(255,255,255,.75);
+    border:1px solid rgba(79,70,229,.15);box-shadow:0 4px 14px rgba(11,31,77,.06);
+  }
+  .eyebrow .dot{width:8px;height:8px;border-radius:50%;background:var(--grad);box-shadow:0 0 0 4px rgba(79,70,229,.15)}
+  .hero h1{
+    margin-top:18px;
+    font-size:clamp(72px,19vw,132px);font-weight:800;letter-spacing:-.055em;line-height:1;
+    padding:0 .04em .14em;
+    background:var(--grad-text);background-size:200% auto;
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    animation:flow 10s linear infinite;
+  }
+  @keyframes flow{to{background-position:200% center}}
+  .tagline{margin-top:6px;font-size:clamp(23px,5.6vw,32px);font-weight:650;font-weight:600;letter-spacing:-.022em;line-height:1.2}
+  .tagline span{color:var(--soft)}
+  .lede{margin-top:14px;font-size:clamp(17px,4.2vw,19px);color:var(--muted);max-width:30ch}
+
+  /* ---------- cards ---------- */
+  .card{
+    position:relative;margin-top:20px;padding:28px 26px;
+    background:rgba(255,255,255,.82);
+    backdrop-filter:saturate(160%) blur(18px);
+    -webkit-backdrop-filter:saturate(160%) blur(18px);
+    border-radius:28px;
+    border:1px solid rgba(255,255,255,.9);
+    box-shadow:0 1px 2px rgba(11,31,77,.04),0 18px 50px -18px rgba(11,31,77,.22);
+  }
+  .card::before{
+    content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1.5px;
+    background:var(--grad);
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor;mask-composite:exclude;
+    opacity:0;transition:opacity .45s var(--ease-out);pointer-events:none;
+  }
+  .card:focus-within::before{opacity:1}
+  .card:focus-within{box-shadow:0 1px 2px rgba(11,31,77,.04),0 24px 60px -18px rgba(79,70,229,.38)}
+
+  .step-head{display:flex;align-items:flex-start;gap:14px;margin-bottom:18px}
+  .num{
+    flex:0 0 40px;height:40px;border-radius:50%;
+    display:grid;place-items:center;font-size:17px;font-weight:700;color:#fff;
+    background:var(--grad);box-shadow:0 8px 20px -6px rgba(79,70,229,.6),inset 0 1px 0 rgba(255,255,255,.3);
+  }
+  .step-title{flex:1;min-width:0}
+  .step-title h2{font-size:22px;font-weight:700;letter-spacing:-.022em;line-height:1.25;margin-top:1px}
+  .step-title p{font-size:15.5px;color:var(--muted);margin-top:2px}
+  .chip{
+    flex:0 0 auto;margin-top:6px;font-size:13px;font-weight:600;color:var(--muted);
+    padding:4px 10px;border-radius:999px;background:rgba(0,0,0,.045);
+    font-variant-numeric:tabular-nums;transition:color .3s,background .3s;
+  }
+  .chip.on{color:var(--indigo);background:rgba(79,70,229,.1)}
+
+  textarea{
+    display:block;width:100%;min-height:230px;resize:vertical;
+    font:inherit;font-size:17px;line-height:1.6;color:var(--ink);
+    padding:18px 20px;border-radius:20px;
+    border:1px solid rgba(0,0,0,.06);background:#f7f7fa;
+    transition:background .3s,border-color .3s,box-shadow .3s;
+  }
+  textarea::placeholder{color:#a1a1a6}
+  textarea:focus{outline:none;background:#fff;border-color:rgba(79,70,229,.35);box-shadow:0 0 0 4px rgba(79,70,229,.12)}
+
+  .action{text-align:center;padding-bottom:30px}
+  .action .step-head{justify-content:center;align-items:center}
+  .action .step-title{flex:0 1 auto;text-align:left}
+
+  .btn{
+    position:relative;overflow:hidden;isolation:isolate;
+    display:inline-flex;align-items:center;justify-content:center;gap:12px;
+    width:100%;max-width:440px;min-height:62px;padding:14px 28px;
+    font:inherit;font-size:19px;font-weight:600;letter-spacing:-.01em;color:#fff;
+    border:none;border-radius:999px;cursor:pointer;
+    background:var(--grad);background-size:180% 180%;background-position:0% 50%;
+    box-shadow:0 14px 34px -10px rgba(79,70,229,.6),inset 0 1px 0 rgba(255,255,255,.25);
+    transition:transform .25s var(--ease-out),box-shadow .35s var(--ease-out),background-position .7s var(--ease-out);
+  }
+  .btn::after{
+    content:"";position:absolute;inset:0;z-index:-1;
+    background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.38) 50%,transparent 70%);
+    transform:translateX(-120%);animation:shine 4s var(--ease-io) infinite 1.5s;
+  }
+  @keyframes shine{0%{transform:translateX(-120%)}45%,100%{transform:translateX(120%)}}
+  .btn:hover{background-position:100% 50%;box-shadow:0 18px 40px -10px rgba(79,70,229,.7),inset 0 1px 0 rgba(255,255,255,.25)}
+  .btn:active{transform:scale(.975)}
+  .btn:focus-visible{outline:3px solid rgba(37,99,235,.45);outline-offset:4px}
+  .btn .arrow{width:20px;height:20px;transition:transform .35s var(--ease-out)}
+  .btn:hover .arrow{transform:translateX(4px)}
+  .badge{
+    font-size:12px;font-weight:700;letter-spacing:.02em;padding:4px 10px;border-radius:999px;
+    background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.38);
+  }
+  .note{
+    margin:18px auto 0;max-width:440px;font-size:16px;color:var(--indigo);font-weight:500;
+    min-height:24px;opacity:0;transform:translateY(-6px);
+    transition:opacity .35s var(--ease-out),transform .35s var(--ease-out);
+  }
+  .note.show{opacity:1;transform:none}
+
+  /* ---------- step 1: key + model ---------- */
+  .field + .field{margin-top:18px}
+  .label{display:block;font-size:14px;font-weight:600;color:var(--muted);margin-bottom:8px;letter-spacing:.01em}
+  .input-wrap{position:relative}
+  .input,.select{
+    display:block;width:100%;min-height:54px;font:inherit;font-size:17px;color:var(--ink);
+    padding:14px 18px;border-radius:16px;border:1px solid rgba(0,0,0,.06);background-color:#f7f7fa;
+    transition:background-color .3s,border-color .3s,box-shadow .3s;
+  }
+  .input{padding-right:86px}
+  .input:focus,.select:focus{outline:none;background-color:#fff;border-color:rgba(79,70,229,.35);box-shadow:0 0 0 4px rgba(79,70,229,.12)}
+  .select{
+    appearance:none;-webkit-appearance:none;padding-right:50px;cursor:pointer;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236e6e73' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 18px center;background-size:18px;
+  }
+  .reveal{
+    position:absolute;right:8px;top:50%;transform:translateY(-50%);
+    font:inherit;font-size:14px;font-weight:600;color:var(--indigo);
+    background:rgba(79,70,229,.08);border:none;border-radius:11px;padding:8px 12px;cursor:pointer;
+  }
+  .hint{display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;margin-top:10px;font-size:14.5px;color:var(--muted)}
+  .hint a{color:var(--indigo);font-weight:600;text-decoration:none}
+  .hint a:hover{text-decoration:underline}
+  .linkbtn{font:inherit;font-size:14.5px;font-weight:600;color:var(--muted);background:none;border:none;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:0}
+  .saved{color:#047857;font-weight:600;opacity:0;transition:opacity .3s}
+  .saved.show{opacity:1}
+
+  /* ---------- busy + messages ---------- */
+  .spinner{width:20px;height:20px;border-radius:50%;border:2.5px solid rgba(255,255,255,.35);border-top-color:#fff;animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .btn:disabled{cursor:progress}
+  .btn:disabled::after{animation:none}
+  .msg{
+    margin:18px auto 0;max-width:520px;text-align:left;font-size:16px;line-height:1.45;font-weight:500;
+    padding:14px 16px;border-radius:16px;display:none;gap:10px;align-items:flex-start;
+    background:#fef2f2;color:#991b1b;border:1px solid #fecaca;overflow-wrap:anywhere;
+  }
+  .msg.show{display:flex;animation:pop .4s var(--ease-out)}
+  .msg svg{flex:0 0 20px;width:20px;height:20px;margin-top:1px}
+  @keyframes pop{from{opacity:0;transform:translateY(-6px)}}
+
+  /* ---------- step 5: results ---------- */
+  .results{display:none;scroll-margin-top:80px}
+  .results.show{display:block;animation:pop .6s var(--ease-out)}
+  .summary{display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center;margin:4px 0 26px}
+  .ringbox{position:relative;width:168px;height:168px}
+  .ringbox svg{width:100%;height:100%;transform:rotate(-90deg)}
+  .ring-track{fill:none;stroke:rgba(79,70,229,.1);stroke-width:11}
+  .ring-bar{fill:none;stroke:url(#g-score);stroke-width:11;stroke-linecap:round;transition:stroke-dashoffset 1.4s var(--ease-out)}
+  .ring-num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .ring-num b{font-size:48px;font-weight:800;letter-spacing:-.045em;line-height:1;font-variant-numeric:tabular-nums}
+  .ring-num span{font-size:12px;font-weight:700;color:var(--soft);margin-top:6px;text-transform:uppercase;letter-spacing:.09em}
+  .verdict{display:inline-flex;align-items:center;font-size:22px;font-weight:700;letter-spacing:-.02em;padding:7px 18px;border-radius:999px}
+  .verdict.v-apply{background:#ecfdf5;color:#047857}
+  .verdict.v-partial{background:#fffbeb;color:#b45309}
+  .verdict.v-skip{background:#fef2f2;color:#b91c1c}
+  .verdict-line{margin-top:10px;font-size:17px}
+  .rule{margin-top:6px;font-size:14px;color:var(--muted)}
+  .stats{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .stat{font-size:13.5px;font-weight:600;padding:5px 11px;border-radius:999px;background:rgba(0,0,0,.045);color:var(--muted)}
+  .stat b{color:var(--ink)}
+  .table-title{font-size:18px;font-weight:700;letter-spacing:-.015em;margin-bottom:6px}
+
+  .req-table{width:100%;border-collapse:collapse;font-size:15.5px}
+  .req-table th{text-align:left;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--soft);padding:10px 10px;border-bottom:1px solid rgba(0,0,0,.08)}
+  .req-table td{padding:14px 10px;border-bottom:1px solid rgba(0,0,0,.06);vertical-align:top;overflow-wrap:anywhere}
+  .req-table tr.group td{padding:20px 10px 8px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--indigo);border-bottom:1px solid rgba(79,70,229,.18)}
+  .req-table td.n{color:var(--soft);font-variant-numeric:tabular-nums;width:1%}
+  .req-table td.req{font-weight:600;min-width:140px}
+  .req-table td.proof{width:36%}
+  .req-table td.pts{white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:600;text-align:right}
+  .req-table th:last-child{text-align:right}
+  .tag{display:inline-block;font-size:12.5px;font-weight:700;padding:3px 10px;border-radius:999px;white-space:nowrap}
+  .tag.must{background:rgba(79,70,229,.1);color:var(--indigo)}
+  .tag.nice{background:rgba(0,0,0,.05);color:var(--muted)}
+  .tag.yes{background:#ecfdf5;color:#047857}
+  .tag.partial{background:#fffbeb;color:#b45309}
+  .tag.no{background:#fef2f2;color:#b91c1c}
+  .was{display:block;font-size:12.5px;color:var(--muted);margin-top:5px;white-space:normal}
+  .quote{display:block;font-size:15px;color:#3a3a3c;background:#f7f7fa;border-left:3px solid #a5b4fc;padding:8px 12px;border-radius:4px 12px 12px 4px}
+  .quote.bad{border-left-color:#fca5a5;color:var(--muted);text-decoration:line-through;text-decoration-color:rgba(185,28,28,.45)}
+  .qstat{display:block;font-size:12.5px;font-weight:700;margin-top:6px}
+  .qstat.ok{color:#047857}
+  .qstat.bad{color:#b91c1c}
+  .qstat.none{color:var(--soft);font-weight:600;margin-top:0}
+  .foot-note{margin-top:18px;font-size:14px;color:var(--muted)}
+
+  [hidden]{display:none !important}
+  .msg.success{background:#ecfdf5;color:#065f46;border-color:#a7f3d0}
+  .msg.left{margin:0 0 14px;max-width:none}
+  .btn[disabled]:not(.busy){opacity:.45;cursor:not-allowed;box-shadow:none}
+  .btn[disabled]:not(.busy)::after{animation:none}
+  .chip.warn{color:#b45309;background:#fffbeb}
+  .chip.good{color:#047857;background:#ecfdf5}
+  .small-note{font-size:14px;color:var(--muted)}
+  .action-row{text-align:center;margin-top:22px}
+
+  /* secondary buttons */
+  .btn2{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:10px 18px;
+    font:inherit;font-size:16px;font-weight:600;color:var(--indigo);background:#fff;
+    border:1px solid rgba(79,70,229,.25);border-radius:999px;cursor:pointer;
+    box-shadow:0 2px 8px rgba(11,31,77,.06);transition:background .2s,border-color .2s,transform .15s;
+  }
+  .btn2:hover{background:#f5f3ff;border-color:rgba(79,70,229,.45)}
+  .btn2:active{transform:scale(.97)}
+  .btn2:disabled{opacity:.5;cursor:not-allowed}
+  .btn2 svg{width:18px;height:18px}
+  .btn2 .spinner{border-color:rgba(79,70,229,.25);border-top-color:var(--indigo);width:16px;height:16px}
+  .btn2.sm{min-height:36px;padding:6px 14px;font-size:14px}
+  .btn2.danger{color:#b91c1c;border-color:rgba(185,28,28,.25)}
+  .btn2.danger:hover{background:#fef2f2}
+
+  /* v0.4 upload */
+  .upload-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-bottom:14px}
+  .card.drag::before{opacity:1}
+  .card.drag textarea{background:#eef2ff}
+
+  /* later steps */
+  .later{display:none;scroll-margin-top:80px}
+  .later.show{display:block;animation:pop .6s var(--ease-out)}
+
+  /* v0.5 questions */
+  .gaps-info{font-size:15.5px;color:var(--muted);margin:-4px 0 6px}
+  .q{padding:18px 0;border-top:1px solid rgba(0,0,0,.07)}
+  .q:first-child{border-top:none}
+  .q-top{display:flex;gap:6px;margin-bottom:8px}
+  .q h4{font-size:17px;font-weight:650;font-weight:600;letter-spacing:-.01em;overflow-wrap:anywhere}
+  .q-ask{display:block;font-size:15.5px;color:var(--muted);margin:2px 0 10px}
+  textarea.ans{min-height:96px}
+
+  /* v0.6 review */
+  .step-head .pill{flex:0 0 auto;margin-top:6px;font-size:12.5px;font-weight:700;padding:4px 10px;border-radius:999px}
+  #reviewCard .step-head{flex-wrap:wrap}
+  #reviewCard .step-title{flex:1 1 200px}
+  .pill.pending{background:#fffbeb;color:#b45309}
+  .pill.ok{background:#ecfdf5;color:#047857}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .pane{min-width:0}
+  .pane-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px;font-size:15px}
+  .pane-head .sub{font-size:13px;color:var(--soft)}
+  textarea.md{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:14px;line-height:1.6;min-height:460px}
+  textarea.md[readonly]{background:#f0f0f4;color:#3a3a3c}
+  textarea.md:disabled{background:#f7f7fa;cursor:not-allowed}
+  .ask{margin-top:20px}
+  .ask-row{display:flex;gap:10px}
+  .ask-row .input{padding-right:18px;flex:1;min-width:0}
+  .flags-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:28px}
+  .flags-head .table-title{margin:0}
+  .flag{margin-top:10px;padding:12px 14px;border-radius:14px;background:#fffbeb;border:1px solid #fde68a}
+  .flag-line{font-size:15px;overflow-wrap:anywhere;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  .flag mark{background:#fde68a;color:#78350f;border-radius:4px;padding:0 3px}
+  .flag-why{font-size:13.5px;color:#92400e;margin-top:6px;overflow-wrap:anywhere}
+  .flag-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  .allclear{margin-top:10px;padding:12px 14px;border-radius:14px;background:#ecfdf5;color:#047857;font-weight:600;font-size:15px}
+  .tick{display:flex;gap:12px;align-items:flex-start;margin-top:24px;padding:14px 16px;border-radius:16px;background:#f7f7fa;cursor:pointer;font-size:16px;font-weight:500}
+  .tick input{width:22px;height:22px;flex:0 0 22px;margin-top:1px;accent-color:var(--indigo);cursor:pointer}
+  .tick input:disabled{cursor:not-allowed}
+
+  /* v0.5/0.6 before and after */
+  .ba{display:flex;align-items:center;justify-content:center;gap:18px;margin:6px 0 16px}
+  .ba-col{display:flex;flex-direction:column;align-items:center;gap:8px;font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--soft)}
+  .ringbox.sm{width:124px;height:124px}
+  .ringbox.sm .ring-num b{font-size:36px}
+  .ringbox.sm .ring-num span{display:none}
+  .ringbox.before .ring-bar{stroke:#c4c4cf}
+  .ba-arrow{width:28px;height:28px;color:var(--indigo);flex:0 0 28px}
+  .ba-verdict{text-align:center;margin-bottom:22px}
+  .ba-verdict .stats{justify-content:center}
+  .hist{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:12px 0;border-top:1px solid rgba(0,0,0,.07);font-size:15px}
+  .hist .meta{color:var(--muted)}
+  .hist .acts{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+  .hist-md{flex:1 1 100%;white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;background:#f7f7fa;border-radius:12px;padding:12px;max-height:320px;overflow:auto;overflow-wrap:anywhere}
+  .file-note{text-align:center;margin-top:12px;font-size:14.5px;color:var(--muted)}
+  .file-note.blocked{color:#b91c1c;font-weight:600}
+
+  footer{text-align:center;color:var(--soft);font-size:14px;margin-top:44px}
+  footer b{font-weight:600;color:var(--muted)}
+
+  /* ---------- page entrance ---------- */
+  .js .rise{opacity:0;transform:translateY(26px) scale(.985)}
+  .js .rise.in{
+    opacity:1;transform:none;
+    transition:opacity .9s var(--ease-out) var(--d,0ms),transform 1.1s var(--ease-out) var(--d,0ms);
+  }
+  .js .topbar.rise{transform:translateY(-100%)}
+  .js .topbar.rise.in{transform:none}
+
+  /* ---------- intro ---------- */
+  .intro{display:none}
+  .js .intro{
+    display:block;position:fixed;inset:0;z-index:100;overflow:hidden;
+    background:var(--bg);
+  }
+  .cluster{position:absolute;inset:0;z-index:3;--t:70px}
+  .tile{
+    position:absolute;left:50%;top:50%;
+    width:var(--t);height:var(--t);
+    margin:calc(var(--t) / -2) 0 0 calc(var(--t) / -2);
+    border-radius:30%;background:#fff;display:grid;place-items:center;
+    box-shadow:0 14px 30px -10px rgba(11,31,77,.35),0 0 0 1px rgba(11,31,77,.05),inset 0 1px 0 #fff;
+    opacity:0;will-change:transform,opacity;
+  }
+  .tile svg{width:48%;height:48%;fill:none;stroke:url(#g-icon);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .tile.alt{background:var(--grad);box-shadow:0 14px 30px -10px rgba(79,70,229,.6),inset 0 1px 0 rgba(255,255,255,.3)}
+  .tile.alt svg{stroke:#fff}
+
+  .dark,.ring{position:absolute;left:50%;top:50%;border-radius:50%;transform:scale(0)}
+  .dark{z-index:1;background:radial-gradient(circle at 50% 50%,#101845 0%,#080b22 38%,#04050d 70%)}
+  .ring{
+    z-index:4;opacity:0;pointer-events:none;
+    border:1.5px solid rgba(191,203,255,.9);
+    box-shadow:0 0 70px 8px rgba(124,58,237,.45),inset 0 0 70px 8px rgba(37,99,235,.35);
+  }
+  .orb{position:absolute;z-index:2;border-radius:50%;filter:blur(60px);opacity:0;pointer-events:none}
+  .orb.o1{width:70vmax;height:70vmax;left:-25vmax;top:-30vmax;background:radial-gradient(circle,rgba(37,99,235,.5),transparent 62%);animation:drift1 14s ease-in-out infinite alternate}
+  .orb.o2{width:70vmax;height:70vmax;right:-28vmax;bottom:-32vmax;background:radial-gradient(circle,rgba(124,58,237,.48),transparent 62%);animation:drift2 17s ease-in-out infinite alternate}
+  @keyframes drift1{to{transform:translate(12vmax,10vmax)}}
+  @keyframes drift2{to{transform:translate(-12vmax,-8vmax)}}
+
+  .stage{
+    position:absolute;inset:0;z-index:5;pointer-events:none;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:24px;text-align:center;
+  }
+  .glow{
+    position:absolute;left:50%;top:50%;width:min(520px,120vw);height:min(520px,120vw);border-radius:50%;
+    background:radial-gradient(circle,rgba(99,102,241,.55) 0%,rgba(124,58,237,.2) 38%,transparent 68%);
+    opacity:0;transform:translate(-50%,-50%) scale(.4);
+  }
+  .ilogo{position:relative;width:116px;height:116px;opacity:0;border-radius:32px}
+  .ilogo .draw{stroke-dasharray:1;stroke-dashoffset:1}
+  .iword{
+    position:relative;margin-top:22px;
+    font-size:clamp(76px,22vw,144px);font-weight:800;letter-spacing:-.055em;line-height:1.02;
+    white-space:nowrap;
+  }
+  .iword .ch{
+    display:inline-block;opacity:0;padding:0 .015em .12em;
+    background:linear-gradient(100deg,#c7d2fe 0%,#ffffff 32%,#ffffff 42%,#93c5fd 50%,#ffffff 58%,#ddd6fe 100%);
+    background-size:260% 100%;background-position:100% 0;
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .iword.sheen .ch{animation:sheen 3s var(--ease-io) infinite;animation-delay:calc(var(--i) * 90ms)}
+  @keyframes sheen{0%{background-position:100% 0}55%,100%{background-position:0% 0}}
+  .itag{
+    position:relative;margin-top:4px;
+    font-size:clamp(19px,5vw,25px);font-weight:500;letter-spacing:-.012em;
+    color:rgba(226,232,255,.8);opacity:0;
+  }
+  .itag b{font-weight:600;color:#fff}
+  .skip{
+    position:absolute;z-index:6;right:20px;bottom:calc(22px + env(safe-area-inset-bottom));
+    font:inherit;font-size:14px;font-weight:600;letter-spacing:.01em;
+    padding:9px 18px;border-radius:999px;cursor:pointer;
+    color:#1d1d1f;background:rgba(255,255,255,.65);border:1px solid rgba(0,0,0,.1);
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    opacity:0;transition:opacity .5s,color .5s,background .5s,border-color .5s;
+  }
+  .skip.show{opacity:1}
+  .intro.isdark .skip{color:#e5e7eb;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2)}
+  .skip:focus-visible{outline:2px solid #93c5fd;outline-offset:3px}
+
+  @media (max-width:520px){
+    body{font-size:17px}
+    main{padding:0 16px 60px}
+    .hero{padding:48px 0 30px}
+    .hero-logo{width:72px;height:72px;border-radius:20px}
+    .card{padding:22px 18px;border-radius:24px}
+    .step-title h2{font-size:20px}
+    .step-title p{font-size:15px}
+    textarea{min-height:200px;font-size:16px;padding:16px}
+    .ilogo{width:96px;height:96px;border-radius:26px}
+    .summary{grid-template-columns:1fr;justify-items:center;text-align:center;gap:18px}
+    .ringbox{width:156px;height:156px}
+    .stats{justify-content:center}
+  }
+  @media (max-width:720px){
+    .split{grid-template-columns:1fr}
+    textarea.md{min-height:320px}
+  }
+  @media (max-width:520px){
+    .ask-row{flex-direction:column}
+    .ba{gap:10px}
+    .ringbox.sm{width:112px;height:112px}
+  }
+  @media (max-width:640px){
+    .req-table thead{display:none}
+    .req-table,.req-table tbody{display:block}
+    .req-table tr{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:16px 0;border-bottom:1px solid rgba(0,0,0,.07)}
+    .req-table td{display:block;padding:0;border:none}
+    .req-table td.n{display:none}
+    .req-table td.req{flex:1 1 100%;min-width:0;font-size:16px}
+    .req-table td.proof{flex:1 1 100%}
+    .req-table td.pts{margin-left:auto}
+    .req-table td.pts::before{content:"Points ";color:var(--soft);font-weight:500}
+    .req-table tr.group{padding:18px 0 6px;border-bottom:1px solid rgba(79,70,229,.18)}
+    .req-table tr.group td{padding:0;border:none}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .blob,.hero h1,.hero-logo-wrap,.btn::after,.orb{animation:none}
+  }
+  /* ---------- sign-in gate ---------- */
+  #authGate{display:none;max-width:460px;margin:8px auto 80px}
+  body.locked #authGate{display:block;order:2;width:100%}
+  body.locked main{display:flex;flex-direction:column}
+  body.locked main > :not(#authGate):not(.hero){display:none}
+  body.locked .hero .lede{display:none}
+  #authGate .input{width:100%}
+  #authGate .btn{width:100%;justify-content:center;margin-top:14px}
+  #authMsg{margin-top:12px;font-size:15px;color:var(--muted);min-height:1.2em}
+  #authMsg.err{color:#b91c1c}
+  #authMsg.ok{color:#047857}
+  #signOut{display:none;margin-left:12px;font-size:14px;background:none;border:0;color:var(--muted);cursor:pointer;text-decoration:underline}
+  body:not(.locked) #signOut.on{display:inline}
+</style>
+</head>
+<body class="intro-on locked">
+
+<!-- shared gradients and logo -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="g-brand" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1e3a8a"/><stop offset=".42" stop-color="#2563eb"/>
+      <stop offset=".72" stop-color="#4f46e5"/><stop offset="1" stop-color="#7c3aed"/>
+    </linearGradient>
+    <linearGradient id="g-gloss" x1="0" y1="0" x2="0" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff" stop-opacity=".34"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="g-icon" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1d4ed8"/><stop offset="1" stop-color="#7c3aed"/>
+    </linearGradient>
+    <linearGradient id="g-score" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2563eb"/><stop offset=".6" stop-color="#4f46e5"/><stop offset="1" stop-color="#7c3aed"/>
+    </linearGradient>
+    <symbol id="logo" viewBox="0 0 64 64">
+      <rect width="64" height="64" rx="18" fill="url(#g-brand)"/>
+      <rect width="64" height="64" rx="18" fill="url(#g-gloss)"/>
+      <path d="M17 22v11a12 12 0 0 0 24 0V18" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M34.5 24.5 41 18l6.5 6.5" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- intro -->
+<div class="intro" id="intro" aria-label="urjob intro">
+  <div class="dark" id="dark"></div>
+  <div class="orb o1" id="o1"></div>
+  <div class="orb o2" id="o2"></div>
+  <div class="cluster" id="cluster" aria-hidden="true"></div>
+  <div class="ring" id="ring"></div>
+  <div class="stage">
+    <div class="glow" id="glow"></div>
+    <svg class="ilogo" id="ilogo" viewBox="0 0 64 64" aria-hidden="true">
+      <rect width="64" height="64" rx="18" fill="url(#g-brand)"/>
+      <rect width="64" height="64" rx="18" fill="url(#g-gloss)"/>
+      <path class="draw" id="lu" pathLength="1" d="M17 22v11a12 12 0 0 0 24 0V18" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      <path class="draw" id="la" pathLength="1" d="M34.5 24.5 41 18l6.5 6.5" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div class="iword" id="iword" aria-label="urjob"><span class="ch" style="--i:0">u</span><span class="ch" style="--i:1">r</span><span class="ch" style="--i:2">j</span><span class="ch" style="--i:3">o</span><span class="ch" style="--i:4">b</span></div>
+    <div class="itag" id="itag">Apply smarter. <b>Stay honest.</b></div>
+  </div>
+  <button class="skip" id="skip" type="button">Skip</button>
+</div>
+
+<div class="ambient" aria-hidden="true"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+
+<header class="topbar rise">
+  <div class="brand"><svg viewBox="0 0 64 64" aria-hidden="true"><use href="#logo"/></svg>urjob</div>
+  <div class="version" id="version">v0.8<button id="signOut" type="button">Sign out</button></div>
+</header>
+
+<main>
+  <section class="card rise" id="authGate">
+    <div class="step-head">
+      <div class="num">&rarr;</div>
+      <div class="step-title"><h2>Sign in</h2><p>Enter your email. We send you a sign-in link.</p></div>
+    </div>
+    <form id="authForm" novalidate>
+      <div class="field">
+        <label class="label" for="authEmail">Email</label>
+        <input class="input" id="authEmail" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com" required>
+      </div>
+      <button class="btn" id="authBtn" type="submit">Email me a sign-in link</button>
+      <div id="authMsg" role="status" aria-live="polite"></div>
+    </form>
+  </section>
+  <section class="hero">
+    <div class="rise"><div class="hero-logo-wrap"><svg class="hero-logo" viewBox="0 0 64 64" aria-hidden="true"><use href="#logo"/></svg></div></div>
+    <div class="eyebrow rise"><span class="dot"></span>Honest CV-to-job fit check</div>
+    <h1 class="rise">urjob</h1>
+    <p class="tagline rise">Apply smarter. <span>Stay honest.</span></p>
+    <p class="lede rise">Add your Gemini key, upload or paste your CV and a job post, then check your fit.</p>
+  </section>
+
+  <section class="card rise">
+    <div class="step-head">
+      <div class="num">1</div>
+      <div class="step-title"><h2>Connect Gemini</h2><p>Your key is saved only in this browser.</p></div>
+    </div>
+    <div class="field">
+      <label class="label" for="apiKey">Gemini API key</label>
+      <div class="input-wrap">
+        <input class="input" id="apiKey" type="password" autocomplete="off" spellcheck="false" placeholder="Paste your key here">
+        <button class="reveal" id="revealKey" type="button" aria-controls="apiKey">Show</button>
+      </div>
+      <div class="hint">
+        <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Get a key from Google AI Studio ↗</a>
+        <button class="linkbtn" id="forgetKey" type="button">Forget key</button>
+        <span class="saved" id="saved">Saved</span>
+      </div>
+    </div>
+    <div class="field">
+      <label class="label" for="model">Model</label>
+      <select class="select" id="model">
+        <option value="gemini-3.1-flash-lite">gemini-3.1-flash-lite</option>
+        <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite</option>
+        <option value="gemini-3.8-flash">gemini-3.8-flash</option>
+      </select>
+    </div>
+  </section>
+
+  <section class="card rise" id="cvCard">
+    <div class="step-head">
+      <div class="num">2</div>
+      <div class="step-title"><h2>Your CV</h2><p>Upload a Word file or paste your CV as text.</p></div>
+      <div class="chip" id="cvCount">0 words</div>
+    </div>
+    <div class="upload-row">
+      <button class="btn2" id="uploadBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4"/><path d="m7 9 5-5 5 5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>Upload .docx</button>
+      <span class="small-note">or drop it here, or paste below</span>
+      <input type="file" id="cvFile" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>
+    </div>
+    <div class="msg left" id="uploadMsg" data-left="1"></div>
+    <textarea id="cv" placeholder="Paste your CV here…" aria-label="Your CV"></textarea>
+  </section>
+
+  <section class="card rise">
+    <div class="step-head">
+      <div class="num">3</div>
+      <div class="step-title"><h2>The job post</h2><p>Paste the whole job description.</p></div>
+      <div class="chip" id="jobCount">0 words</div>
+    </div>
+    <textarea id="job" placeholder="Paste the job post here…" aria-label="Job post"></textarea>
+  </section>
+
+  <section class="card action rise">
+    <div class="step-head">
+      <div class="num">4</div>
+      <div class="step-title"><h2>See if you fit</h2></div>
+    </div>
+    <button class="btn" id="checkBtn" type="button"></button>
+    <div class="msg" id="msg" role="alert"></div>
+  </section>
+
+  <section class="card results" id="results">
+    <div class="step-head">
+      <div class="num">5</div>
+      <div class="step-title"><h2>Your fit</h2><p id="jobLine"></p></div>
+    </div>
+    <div class="summary">
+      <div class="ringbox" role="img" id="ringBox">
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="ring-track" cx="60" cy="60" r="52"/>
+          <circle class="ring-bar" id="ringBar" cx="60" cy="60" r="52"/>
+        </svg>
+        <div class="ring-num"><b id="scoreNum">0</b><span>Fit score</span></div>
+      </div>
+      <div>
+        <div class="verdict" id="verdict"></div>
+        <p class="verdict-line" id="verdictLine"></p>
+        <p class="rule">Apply at 80 or more · Skip below 50 · Partial fit in between</p>
+        <div class="stats" id="stats"></div>
+      </div>
+    </div>
+    <h3 class="table-title">Every requirement in the job post</h3>
+    <table class="req-table">
+      <thead><tr><th>#</th><th>Requirement</th><th>Type</th><th>Match</th><th>Proof from your CV</th><th>Points</th></tr></thead>
+      <tbody id="reqBody"></tbody>
+    </table>
+    <p class="foot-note">Worked out by code, not AI: must-have = 2 points, nice-to-have = 1. Yes earns full points, partial half, no zero. Score = points earned ÷ points possible × 100. If a proof quote is not found in your CV, the match drops one level.</p>
+  </section>
+
+  <section class="card later" id="gapsCard">
+    <div class="step-head">
+      <div class="num">6</div>
+      <div class="step-title"><h2>Close the gaps</h2><p>Answer only what is true. Your answers are the only new facts the AI may use.</p></div>
+    </div>
+    <p class="gaps-info" id="gapsInfo"></p>
+    <div id="questions"></div>
+    <div class="action-row"><button class="btn" id="rewriteBtn" type="button">Write my honest CV</button></div>
+    <p class="small-note" id="gapsNote" style="text-align:center;margin-top:14px" hidden>You can change these answers any time. They are used when you click Suggest improvements in step 8.</p>
+    <div class="msg" id="rewriteMsg"></div>
+  </section>
+
+  <section class="card later" id="reviewCard">
+    <div class="step-head">
+      <div class="num">7</div>
+      <div class="step-title"><h2 id="reviewTitle">Review round 1</h2><p>Nothing is saved or scored until you approve.</p></div>
+      <span class="pill pending" id="reviewPill">Not approved · not saved</span>
+    </div>
+    <div class="split">
+      <div class="pane">
+        <div class="pane-head"><b id="curLabel">Current CV · original</b><span class="sub">Read only</span></div>
+        <textarea class="md" id="curMd" readonly aria-label="Current CV"></textarea>
+      </div>
+      <div class="pane">
+        <div class="pane-head"><b>Proposed CV</b><span class="sub">Edit freely</span></div>
+        <textarea class="md" id="propMd" aria-label="Proposed CV"></textarea>
+      </div>
+    </div>
+    <div class="ask">
+      <label class="label" for="askAi">Ask the AI to change it</label>
+      <div class="ask-row">
+        <input class="input" id="askAi" type="text" placeholder="For example: make the summary shorter">
+        <button class="btn2" id="askBtn" type="button">Ask AI</button>
+      </div>
+    </div>
+    <div class="flags-head"><h3 class="table-title">Honesty check</h3><span class="chip" id="flagCount"></span></div>
+    <p class="small-note">Code lists every number and capitalised word in the proposal that is not in your original CV or your answers.</p>
+    <div id="flags"></div>
+    <label class="tick"><input type="checkbox" id="tick"><span>Every line is true and I can explain it in an interview</span></label>
+    <div class="action-row">
+      <button class="btn" id="approveBtn" type="button" disabled>This is me. Approve <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></button>
+    </div>
+    <div class="msg" id="reviewMsg"></div>
+  </section>
+
+  <section class="card later" id="afterCard">
+    <div class="step-head">
+      <div class="num">8</div>
+      <div class="step-title"><h2>Before and after</h2><p id="afterSub">Scored with the same rules as step 5.</p></div>
+    </div>
+    <div class="ba">
+      <div class="ba-col"><div class="ringbox sm before" id="ringBefore"></div>Before</div>
+      <svg class="ba-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      <div class="ba-col"><div class="ringbox sm" id="ringAfter"></div>After</div>
+    </div>
+    <div class="ba-verdict" id="afterVerdictBox">
+      <div class="verdict" id="afterVerdict"></div>
+      <p class="verdict-line" id="afterLine"></p>
+      <div class="stats" id="afterStats"></div>
+    </div>
+    <div id="cmpWrap">
+      <h3 class="table-title">Every requirement, before and after</h3>
+      <table class="req-table">
+        <thead><tr><th>Requirement</th><th>Type</th><th>Before</th><th>After</th><th>Proof in approved CV</th></tr></thead>
+        <tbody id="cmpBody"></tbody>
+      </table>
+    </div>
+    <h3 class="table-title" style="margin-top:26px">History</h3>
+    <p class="small-note">The last 5 approved rounds are kept.</p>
+    <div id="history"></div>
+    <div class="action-row"><button class="btn" id="improveBtn" type="button">Suggest improvements</button></div>
+    <p class="small-note" id="improveNote" style="text-align:center;margin-top:12px"></p>
+    <div class="msg" id="afterMsg"></div>
+  </section>
+
+  <section class="card later" id="downloadCard">
+    <div class="step-head">
+      <div class="num">9</div>
+      <div class="step-title"><h2>Download as Word</h2><p>Your approved CV, built in this browser. One column.</p></div>
+    </div>
+    <div class="action-row" style="margin-top:6px"><button class="btn" id="downloadBtn" type="button">Download as Word <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12M6 10l6 6 6-6M5 20h14"/></svg></button></div>
+    <p class="file-note" id="fileNote"></p>
+    <div class="msg" id="downloadMsg"></div>
+  </section>
+
+  <footer class="rise"><b>urjob</b> · Apply smarter. Stay honest.</footer>
+</main>
+
+<script>
+/* ---------- sign-in (Supabase magic link) ---------- */
+(function(){
+  const SB_URL = "https://jwgegmmhorctuypectvt.supabase.co", SB_KEY = "sb_publishable_I3er-2xsik5S5GED5_HoHw_9nhaOv1f";
+  const body = document.body, msg = document.getElementById('authMsg');
+  const form = document.getElementById('authForm'), email = document.getElementById('authEmail');
+  const btn = document.getElementById('authBtn'), out = document.getElementById('signOut');
+  function say(t, cls){ msg.textContent = t; msg.className = cls || ''; }
+  function setSignedIn(on){ body.classList.toggle('locked', !on); out.classList.toggle('on', on); }
+  window.addEventListener('DOMContentLoaded', init);
+  function init(){
+    if (!window.supabase){ say('Sign-in could not load. Check your connection and reload.', 'err'); return; }
+    const sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, detectSessionInUrl: true } });
+    sb.auth.getSession().then(r => setSignedIn(!!(r.data && r.data.session)));
+    sb.auth.onAuthStateChange((_e, session) => {
+      setSignedIn(!!session);
+      if (session && location.hash.includes('access_token')) history.replaceState(null, '', location.pathname);
+    });
+    form.addEventListener('submit', async ev => {
+      ev.preventDefault();
+      const v = email.value.trim();
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)){ say('Enter a valid email address.', 'err'); return; }
+      btn.disabled = true; say('Sending...');
+      const { error } = await sb.auth.signInWithOtp({ email: v, options: { emailRedirectTo: location.origin + location.pathname } });
+      btn.disabled = false;
+      if (error) say(error.message || 'Could not send the link. Try again.', 'err');
+      else say('Check your inbox for the sign-in link.', 'ok');
+    });
+    out.addEventListener('click', async () => { await sb.auth.signOut(); setSignedIn(false); say(''); });
+  }
+})();
+</script>
+<script>
+/* ---------- word counts ---------- */
+function wordCount(t){ const s = t.trim(); return s ? s.split(/\s+/).length : 0; }
+function bindCount(boxId, outId){
+  const box = document.getElementById(boxId), out = document.getElementById(outId);
+  const update = () => {
+    const n = wordCount(box.value);
+    out.textContent = n + (n === 1 ? ' word' : ' words');
+    out.classList.toggle('on', n > 0);
+  };
+  box.addEventListener('input', update); update();
+}
+bindCount('cv','cvCount');
+bindCount('job','jobCount');
+
+const $ = id => document.getElementById(id);
+
+/* ---------- step 1: key + model, saved only in this browser ---------- */
+const store = {
+  get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
+  set(k, v){ try { localStorage.setItem(k, v); } catch(e){} },
+  del(k){ try { localStorage.removeItem(k); } catch(e){} }
+};
+const MODELS = ['gemini-3.1-flash-lite', 'gemini-3.5-flash-lite', 'gemini-3.8-flash'];
+const keyInput = $('apiKey'), modelSel = $('model'), savedTag = $('saved');
+keyInput.value = store.get('apn_key') || '';
+const savedModel = store.get('apn_model');
+modelSel.value = MODELS.includes(savedModel) ? savedModel : MODELS[0];
+let savedTimer;
+function flashSaved(text){
+  savedTag.textContent = text || 'Saved';
+  savedTag.classList.add('show');
+  clearTimeout(savedTimer);
+  savedTimer = setTimeout(() => savedTag.classList.remove('show'), 1600);
+}
+keyInput.addEventListener('input', () => {
+  const v = keyInput.value.trim();
+  if (v) store.set('apn_key', v); else store.del('apn_key');
+  flashSaved();
+});
+modelSel.addEventListener('change', () => { store.set('apn_model', modelSel.value); flashSaved(); });
+$('revealKey').addEventListener('click', e => {
+  const show = keyInput.type === 'password';
+  keyInput.type = show ? 'text' : 'password';
+  e.currentTarget.textContent = show ? 'Hide' : 'Show';
+});
+$('forgetKey').addEventListener('click', () => { keyInput.value = ''; store.del('apn_key'); flashSaved('Key removed'); });
+
+/* ---------- Gemini call ---------- */
+class PlainError extends Error {}
+async function callGemini(system, user){
+  const key = keyInput.value.trim();
+  const model = modelSel.value;
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent';
+  const body = {
+    systemInstruction: { parts: [{ text: system }] },
+    contents: [{ role: 'user', parts: [{ text: user }] }],
+    generationConfig: { responseMimeType: 'application/json' }
+  };
+  let res;
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+      body: JSON.stringify(body)
+    });
+  } catch (e) {
+    throw new PlainError('Could not reach Gemini. Try your phone hotspot.');
+  }
+  let raw = '', data = null;
+  try { raw = await res.text(); data = JSON.parse(raw); } catch (e) {}
+  if (!res.ok){
+    const msg = (data && data.error && data.error.message) || raw || res.statusText || '';
+    if (res.status === 400 && /key/i.test(msg)) throw new PlainError('This API key is not valid. Copy it again.');
+    if (res.status === 429) throw new PlainError('Gemini limit reached. Wait 60 seconds or switch the model.');
+    if (res.status === 404) throw new PlainError('Model not found. Switch the model.');
+    if (res.status === 503) throw new PlainError('Gemini is busy. Click again.');
+    throw new PlainError('Gemini error ' + res.status + ': ' + (msg || 'no message from Gemini.'));
+  }
+  const cand = data && data.candidates && data.candidates[0];
+  if (!cand){
+    const why = data && data.promptFeedback && data.promptFeedback.blockReason;
+    throw new PlainError(why ? 'Gemini refused to answer (' + why + '). Check your text and click again.' : 'Gemini sent an empty reply. Click again.');
+  }
+  if (cand.finishReason === 'MAX_TOKENS')
+    throw new PlainError('Gemini’s answer was cut off before the end, so some requirements would be missing. Click again or switch the model.');
+  const parts = (cand.content && cand.content.parts) || [];
+  let text = parts.filter(p => !p.thought).map(p => p.text || '').join('').trim();
+  text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
+  try { return JSON.parse(text); }
+  catch (e) { throw new PlainError('Gemini’s reply was not in the expected format. Click again.'); }
+}
+
+/* ---------- prompt: read the job post and the CV ---------- */
+const SYSTEM_MATCH = `You compare one job post with one CV for a job seeker.
+
+TASK
+1. Read the job post and list EVERY requirement it states or asks for: skills, tools, technologies, experience, years, education, certifications, languages, location or work rights, soft skills, and duties the candidate must be able to do. One requirement per item.
+2. Never cap, sample, skip, summarise or merge requirements. If the job post lists 30 things, return 30 items. Split a line that combines different requirements into separate items (for example "Python and SQL" becomes two items).
+3. Do not list benefits, perks, salary, or descriptions of the company.
+4. importance: "nice" if the job post says preferred, bonus, plus, nice to have, ideally, desirable or similar. Otherwise "must".
+5. match: "yes" if the CV clearly shows it, "partial" if the CV shows something related or weaker, "no" if the CV does not show it.
+6. evidence: copy the exact words from the CV that prove the match, character for character, as one continuous piece of CV text (a phrase or one sentence). Do not fix spelling, reword, shorten with "..." or combine separate parts of the CV. If match is "no", evidence must be "".
+7. Order: all "must" items first, then all "nice" items, each group in the order they appear in the job post.
+8. role and company: take them from the job post. Use "" if not stated.
+
+HONESTY RULE: Never add a skill, tool, employer, number or achievement that is not in the user's CV or the user's own typed answers. Never invent evidence.
+
+Reply with JSON only, in exactly this shape:
+{"role":"","company":"","requirements":[{"requirement":"","importance":"must|nice","match":"yes|partial|no","evidence":"exact quote copied from the CV, or empty"}]}`;
+
+/* ---------- exact jobs done by code ---------- */
+const APPLY_AT = 80, SKIP_BELOW = 50;
+const LEVELS = ['no', 'partial', 'yes'];
+const MATCH_VALUE = { yes: 1, partial: 0.5, no: 0 };
+const norm = s => String(s == null ? '' : s).toLowerCase().replace(/\s+/g, ' ').trim();
+
+function checkRequirements(list, cvText){
+  const cv = norm(cvText);
+  const rows = [];
+  list.forEach(r => {
+    if (!r || typeof r !== 'object') return;
+    const requirement = String(r.requirement == null ? '' : r.requirement).trim();
+    if (!requirement) return;
+    const importance = norm(r.importance) === 'nice' ? 'nice' : 'must';
+    const aiMatch = LEVELS.includes(norm(r.match)) ? norm(r.match) : 'no';
+    const quote = String(r.evidence == null ? '' : r.evidence).trim();
+    const quoteStatus = !quote ? 'none' : (cv.includes(norm(quote)) ? 'found' : 'missing');
+    let match = aiMatch;
+    if (aiMatch !== 'no' && quoteStatus !== 'found') match = LEVELS[LEVELS.indexOf(aiMatch) - 1]; // drop one level
+    const weight = importance === 'must' ? 2 : 1;
+    rows.push({ requirement, importance, aiMatch, match, quote, quoteStatus, weight, earned: weight * MATCH_VALUE[match] });
+  });
+  return rows.filter(r => r.importance === 'must').concat(rows.filter(r => r.importance === 'nice'));
+}
+function scoreOf(rows){
+  const possible = rows.reduce((s, r) => s + r.weight, 0);
+  const earned = rows.reduce((s, r) => s + r.earned, 0);
+  return { possible, earned, score: possible ? Math.round(earned / possible * 100) : 0 };
+}
+function verdictOf(score){
+  if (score >= APPLY_AT) return { cls: 'apply', label: 'Apply', line: 'You match most of what this job asks for.' };
+  if (score < SKIP_BELOW) return { cls: 'skip', label: 'Skip', line: 'Too many gaps for this job right now.' };
+  return { cls: 'partial', label: 'Partial fit', line: 'You match part of it. Look at the gaps before you apply.' };
+}
+
+/* ---------- render ---------- */
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const fmt = n => Number.isInteger(n) ? String(n) : n.toFixed(1);
+function el(tag, cls, text){ const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+const RING_C = 2 * Math.PI * 52;
+const RING_HTML = '<svg viewBox="0 0 120 120" aria-hidden="true"><circle class="ring-track" cx="60" cy="60" r="52"/><circle class="ring-bar" cx="60" cy="60" r="52"/></svg><div class="ring-num"><b>0</b><span>Fit score</span></div>';
+function setRing(box, score){
+  if (!box.querySelector('.ring-bar')) box.innerHTML = RING_HTML;
+  box.setAttribute('role', 'img');
+  box.setAttribute('aria-label', score == null ? 'Not scored yet' : 'Fit score ' + score + ' out of 100');
+  const bar = box.querySelector('.ring-bar'), num = box.querySelector('.ring-num b');
+  bar.style.strokeDasharray = RING_C;
+  bar.style.transition = 'none';
+  bar.style.strokeDashoffset = RING_C;
+  bar.getBoundingClientRect();
+  bar.style.transition = '';
+  if (score == null){ num.textContent = '–'; return; }
+  requestAnimationFrame(() => { bar.style.strokeDashoffset = RING_C * (1 - score / 100); });
+  const t0 = performance.now(), dur = 1400;
+  (function tick(now){
+    const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 4);
+    num.textContent = Math.round(score * e);
+    if (k < 1) requestAnimationFrame(tick);
+  })(t0);
+}
+
+function render(data, rows){
+  const { possible, earned, score } = scoreOf(rows);
+  const v = verdictOf(score);
+  const role = String(data.role || '').trim(), company = String(data.company || '').trim();
+  $('jobLine').textContent = [role, company].filter(Boolean).join(' · ') || 'Job post';
+
+  const verdict = $('verdict');
+  verdict.className = 'verdict v-' + v.cls;
+  verdict.textContent = v.label;
+  $('verdictLine').textContent = v.line;
+
+  const musts = rows.filter(r => r.importance === 'must').length;
+  const quotes = rows.filter(r => r.quote).length;
+  const found = rows.filter(r => r.quoteStatus === 'found').length;
+  const lowered = rows.filter(r => r.match !== r.aiMatch).length;
+  const stats = $('stats'); stats.innerHTML = '';
+  [
+    [rows.length, ' requirements (' + musts + ' must, ' + (rows.length - musts) + ' nice)'],
+    [fmt(earned) + ' / ' + possible, ' points'],
+    [found + ' of ' + quotes, ' quotes found in your CV'],
+    [lowered, lowered === 1 ? ' match lowered' : ' matches lowered']
+  ].forEach(([b, t]) => { const s = el('span', 'stat'); s.appendChild(el('b', null, String(b))); s.appendChild(document.createTextNode(t)); stats.appendChild(s); });
+
+  const body = $('reqBody'); body.innerHTML = '';
+  let n = 0;
+  ['must', 'nice'].forEach(kind => {
+    const group = rows.filter(r => r.importance === kind);
+    if (!group.length) return;
+    const gr = el('tr', 'group'); const gtd = el('td', null, (kind === 'must' ? 'Must-haves · ' : 'Nice-to-haves · ') + group.length);
+    gtd.colSpan = 6; gr.appendChild(gtd); body.appendChild(gr);
+    group.forEach(r => {
+      const tr = el('tr');
+      tr.appendChild(el('td', 'n', String(++n)));
+      tr.appendChild(el('td', 'req', r.requirement));
+      const t = el('td', 'type'); t.appendChild(el('span', 'tag ' + r.importance, r.importance === 'must' ? 'Must' : 'Nice')); tr.appendChild(t);
+      const m = el('td', 'match'); m.appendChild(el('span', 'tag ' + r.match, cap(r.match)));
+      if (r.match !== r.aiMatch) m.appendChild(el('span', 'was', 'Gemini said ' + cap(r.aiMatch) + (r.quoteStatus === 'missing' ? '. Quote not in CV.' : '. No quote given.')));
+      tr.appendChild(m);
+      const p = el('td', 'proof');
+      if (r.quote){
+        const q = el('q', 'quote' + (r.quoteStatus === 'missing' ? ' bad' : ''), r.quote); p.appendChild(q);
+        p.appendChild(r.quoteStatus === 'found' ? el('span', 'qstat ok', '✓ Found in your CV') : el('span', 'qstat bad', '✗ Not found in your CV'));
+      } else {
+        p.appendChild(el('span', 'qstat none', 'No proof in your CV'));
+      }
+      tr.appendChild(p);
+      tr.appendChild(el('td', 'pts', fmt(r.earned) + ' / ' + r.weight));
+      body.appendChild(tr);
+    });
+  });
+
+  const results = $('results');
+  results.classList.add('show');
+  setRing($('ringBox'), score);
+  results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ---------- shared UI helpers ---------- */
+const ARROW = '<svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+const ICON_ALERT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>';
+const ICON_OK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.5 2.5L16 9.5"/></svg>';
+function showMsg(box, text, kind){
+  kind = kind || 'error';
+  box.className = 'msg ' + kind + (box.dataset.left ? ' left' : '');
+  box.setAttribute('role', kind === 'error' ? 'alert' : 'status');
+  box.innerHTML = kind === 'error' ? ICON_ALERT : ICON_OK;
+  box.appendChild(el('span', null, text));
+  void box.offsetWidth;
+  box.classList.add('show');
+}
+function hideMsg(box){ box.classList.remove('show'); }
+function setBtnBusy(btn, busy, label){
+  if (busy){
+    btn.dataset.idle = btn.innerHTML;
+    btn.disabled = true; btn.classList.add('busy');
+    btn.innerHTML = '<span class="spinner" aria-hidden="true"></span>' + label;
+  } else {
+    if (btn.dataset.idle) btn.innerHTML = btn.dataset.idle;
+    btn.classList.remove('busy'); btn.disabled = false;
+  }
+}
+const errText = e => e instanceof PlainError ? e.message : 'Something went wrong: ' + e.message;
+const fence = (label, text) => label + ':\n"""\n' + text + '\n"""';
+
+/* ---------- flow state (kept in memory only) ---------- */
+const MAX_QUESTIONS = 5, MAX_ROUNDS = 5;
+const S = {};
+function resetFlow(cv, job){
+  Object.assign(S, {
+    cv, job, base: [], before: null, current: null, answers: {}, confirmedRaw: new Set(),
+    pending: false, approved: null, approvedRound: 0, approvedCount: 0, history: [], unscored: false, flags: []
+  });
+  ['gapsCard', 'reviewCard', 'afterCard', 'downloadCard'].forEach(id => $(id).classList.remove('show'));
+}
+
+/* ---------- step 4: Check my fit ---------- */
+const checkBtn = $('checkBtn'), msg = $('msg');
+checkBtn.innerHTML = 'Check my fit ' + ARROW;
+checkBtn.addEventListener('click', async () => {
+  hideMsg(msg);
+  const cvText = $('cv').value, jobText = $('job').value;
+  if (!keyInput.value.trim()){ showMsg(msg, 'Paste your Gemini API key in step 1.'); keyInput.focus(); return; }
+  if (!cvText.trim()){ showMsg(msg, 'Upload or paste your CV in step 2.'); $('cv').focus(); return; }
+  if (!jobText.trim()){ showMsg(msg, 'Paste the job post in step 3.'); $('job').focus(); return; }
+  setBtnBusy(checkBtn, true, 'Reading the job post…');
+  try {
+    const user = fence('JOB POST', jobText) + '\n\n' + fence('CV', cvText);
+    const data = await callGemini(SYSTEM_MATCH, user);
+    if (!data || !Array.isArray(data.requirements)) throw new PlainError('Gemini’s reply had no list of requirements. Click again.');
+    const rows = checkRequirements(data.requirements, cvText);
+    if (!rows.length) throw new PlainError('Gemini found no requirements in this job post. Check the job post and click again.');
+    resetFlow(cvText, jobText);
+    S.before = Object.assign({ rows }, scoreOf(rows));
+    S.current = S.before;
+    S.base = rows.map(r => ({ requirement: r.requirement, importance: r.importance }));
+    render(data, rows);
+    renderQuestions();
+    syncButtons();
+    $('gapsCard').classList.add('show');
+  } catch (e) {
+    showMsg(msg, errText(e));
+  } finally {
+    setBtnBusy(checkBtn, false);
+  }
+});
+
+/* ---------- v0.4: upload a .docx CV ---------- */
+const cvFile = $('cvFile'), uploadMsg = $('uploadMsg'), uploadBtn = $('uploadBtn'), cvCard = $('cvCard');
+uploadBtn.addEventListener('click', () => cvFile.click());
+cvFile.addEventListener('change', () => { if (cvFile.files[0]) loadDocx(cvFile.files[0]); cvFile.value = ''; });
+['dragenter', 'dragover'].forEach(t => cvCard.addEventListener(t, e => { e.preventDefault(); cvCard.classList.add('drag'); }));
+['dragleave', 'dragend'].forEach(t => cvCard.addEventListener(t, e => { if (!cvCard.contains(e.relatedTarget)) cvCard.classList.remove('drag'); }));
+cvCard.addEventListener('drop', e => {
+  e.preventDefault(); cvCard.classList.remove('drag');
+  const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+  if (f) loadDocx(f);
+});
+async function loadDocx(file){
+  hideMsg(uploadMsg);
+  if (!/\.docx$/i.test(file.name)){
+    showMsg(uploadMsg, '“' + file.name + '” is not a .docx Word file. Save your CV as .docx in Word, or paste the text below.');
+    return;
+  }
+  if (!window.mammoth){
+    showMsg(uploadMsg, 'Could not load the Word reader. Check your internet and reload the page, or paste your CV below.');
+    return;
+  }
+  setBtnBusy(uploadBtn, true, 'Reading…');
+  try {
+    const result = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
+    const text = String(result.value || '').replace(/\r/g, '').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+    if (!text){ showMsg(uploadMsg, 'No text found in “' + file.name + '”. Paste your CV below instead.'); return; }
+    const box = $('cv');
+    box.value = text;
+    box.dispatchEvent(new Event('input'));
+    showMsg(uploadMsg, 'Loaded “' + file.name + '”. Check the text below and fix anything that looks wrong.', 'success');
+  } catch (e) {
+    showMsg(uploadMsg, 'Could not read “' + file.name + '”. It may be damaged or not a real Word file. Paste your CV below instead.');
+  } finally {
+    setBtnBusy(uploadBtn, false);
+  }
+}
+
+/* ---------- v0.5: gap questions ---------- */
+function gapList(rows){
+  const rank = r => (r.importance === 'must' ? 0 : 2) + (r.match === 'no' ? 0 : 1);
+  return rows.map((r, i) => ({ r, i })).filter(x => x.r.match !== 'yes')
+    .sort((a, b) => rank(a.r) - rank(b.r) || a.i - b.i).map(x => x.r);
+}
+function renderQuestions(){
+  const box = $('questions'); box.innerHTML = '';
+  const gaps = gapList(S.current.rows), asked = gaps.slice(0, MAX_QUESTIONS);
+  let info;
+  if (!gaps.length) info = 'You match every requirement. You can still rewrite your CV toward this job.';
+  else {
+    info = asked.length + (asked.length === 1 ? ' question' : ' questions') + ', most important first.';
+    if (gaps.length > asked.length) info += ' These are the ' + asked.length + ' most important of your ' + gaps.length + ' gaps.';
+    info += ' Leave a box empty if you have not done it.';
+  }
+  $('gapsInfo').textContent = info;
+  asked.forEach((r, k) => {
+    const q = el('div', 'q');
+    const top = el('div', 'q-top');
+    top.appendChild(el('span', 'tag ' + r.importance, r.importance === 'must' ? 'Must' : 'Nice'));
+    top.appendChild(el('span', 'tag ' + r.match, cap(r.match)));
+    q.appendChild(top);
+    q.appendChild(el('h4', null, r.requirement));
+    const lab = el('label', 'q-ask', 'Have you done this? If yes, how and where?');
+    lab.htmlFor = 'ans' + k;
+    q.appendChild(lab);
+    const ta = el('textarea', 'ans');
+    ta.id = 'ans' + k;
+    ta.placeholder = 'Only what is true. Leave empty if not.';
+    ta.value = S.answers[r.requirement] || '';
+    ta.addEventListener('input', () => { S.answers[r.requirement] = ta.value; scheduleFlags(); });
+    q.appendChild(ta);
+    box.appendChild(q);
+  });
+}
+function answersBlock(){
+  const lines = Object.keys(S.answers).filter(k => S.answers[k].trim())
+    .map(k => '- About "' + k + '": ' + S.answers[k].trim());
+  if (S.confirmedRaw.size) lines.push('- The user confirmed these are true: ' + [...S.confirmedRaw].join(', '));
+  return lines.length ? lines.join('\n') : '(no answers)';
+}
+
+/* ---------- v0.5: honest rewrite prompts ---------- */
+const HONESTY = 'HONESTY RULE: Never add a skill, tool, employer, number or achievement that is not in the user\'s CV or the user\'s own typed answers.';
+const CV_SHAPE = '{"name":"","headline":"","contact":[""],"summary":"","skills":[""],"experience":[{"title":"","org":"","dates":"","bullets":[""]}],"education":[{"title":"","org":"","dates":""}]}';
+const WRITE_RULES = `${HONESTY}
+
+RULES
+1. Use only facts found in the ORIGINAL CV, the CURRENT APPROVED CV (if given), the PROPOSED CV (if given) and the USER'S OWN ANSWERS. If an answer is empty or says the user has not done something, do not claim it.
+2. Never invent or estimate numbers. Copy real numbers exactly as written.
+3. Keep every employer, job title, date and education entry as the CV states them. Do not drop any job or education entry.
+4. Lead with what matches the job post: most relevant skills first, most relevant bullet first in each job. Use the job post's words only when they describe the same true thing.
+5. Writing style: warm and confident. Start bullets with strong action verbs. No "I", no clichés, no exaggeration.
+6. summary: at most 3 short lines (at most 3 sentences, under 60 words).
+7. contact: copy the contact details exactly as they appear in the CV.
+8. skills: only skills shown in the CV or the user's answers, one skill per item.
+9. Use "" or [] for anything the CV does not have.
+
+Reply with JSON only, in exactly this shape:
+${CV_SHAPE}`;
+const SYSTEM_REWRITE = 'You rewrite a job seeker\'s CV so it fits one job post better, honestly.\n\n' + WRITE_RULES;
+const SYSTEM_CHANGE = 'You apply one change the user asks for to their PROPOSED CV. Change only what they ask and keep everything else the same. If the request would break the honesty rule, do not do that part.\n\n' + WRITE_RULES;
+const SYSTEM_RESCORE = `You check how well one CV meets a FIXED list of job requirements.
+
+RULES
+1. Return exactly one item for each requirement in the list, in the same order, with the same "requirement" and "importance" text. Do not add, drop, merge or reorder items.
+2. match: "yes" if the CV clearly shows it, "partial" if the CV shows something related or weaker, "no" if the CV does not show it.
+3. evidence: copy the exact words from the CV that prove the match, character for character, as one continuous piece of CV text (a phrase or one sentence). Do not fix spelling, reword, shorten with "..." or combine separate parts of the CV. If match is "no", evidence must be "".
+4. role and company: use "".
+
+HONESTY RULE: Never add a skill, tool, employer, number or achievement that is not in the user's CV or the user's own typed answers. Never invent evidence.
+
+Reply with JSON only, in exactly this shape:
+{"role":"","company":"","requirements":[{"requirement":"","importance":"must|nice","match":"yes|partial|no","evidence":"exact quote copied from the CV, or empty"}]}`;
+
+/* ---------- CV JSON <-> markdown ---------- */
+function normalizeCv(d){
+  if (!d || typeof d !== 'object') return null;
+  const str = v => String(v == null ? '' : v).trim();
+  const arr = v => Array.isArray(v) ? v : [];
+  const obj = x => x && typeof x === 'object';
+  const cv = {
+    name: str(d.name), headline: str(d.headline),
+    contact: arr(d.contact).map(str).filter(Boolean),
+    summary: str(d.summary),
+    skills: arr(d.skills).map(str).filter(Boolean),
+    experience: arr(d.experience).filter(obj).map(x => ({ title: str(x.title), org: str(x.org), dates: str(x.dates), bullets: arr(x.bullets).map(str).filter(Boolean) })),
+    education: arr(d.education).filter(obj).map(x => ({ title: str(x.title), org: str(x.org), dates: str(x.dates) }))
+  };
+  return (cv.name || cv.summary || cv.skills.length || cv.experience.length) ? cv : null;
+}
+function cvToMd(c){
+  const L = [];
+  if (c.name) L.push('# ' + c.name);
+  if (c.headline) L.push(c.headline);
+  if (c.contact.length) L.push(c.contact.join(' · '));
+  if (c.summary){ L.push('', '## Summary', c.summary); }
+  if (c.skills.length){ L.push('', '## Skills'); c.skills.forEach(s => L.push('- ' + s)); }
+  if (c.experience.length){
+    L.push('', '## Experience');
+    c.experience.forEach(x => {
+      L.push('');
+      const head = [x.title, x.org].filter(Boolean).join(' — ');
+      if (head) L.push('### ' + head);
+      if (x.dates) L.push(x.dates);
+      x.bullets.forEach(b => L.push('- ' + b));
+    });
+  }
+  if (c.education.length){
+    L.push('', '## Education');
+    c.education.forEach(x => {
+      L.push('');
+      const head = [x.title, x.org].filter(Boolean).join(' — ');
+      if (head) L.push('### ' + head);
+      if (x.dates) L.push(x.dates);
+    });
+  }
+  return L.join('\n').replace(/^\n+/, '');
+}
+const mdToPlain = md => md.split('\n').map(l => l.replace(/^\s*#{1,6}\s+/, '').replace(/^\s*[-*•]\s+/, '')).join('\n');
+
+/* ---------- v0.5: honesty check (plain code) ---------- */
+const COMMON = new Set(('a an and are as at be been but by for from has have he her his i if in into is it its me my no not of on or our over per she so than that the their them then there these they this those to up us via was we were when where which while who with within without you your also about after across before during each more most new other out such through under using all any both can could did do does done get got had how just made make many may might much must only own same should some still very what why will would yes present current now today').split(' '));
+const WORD_RE = /[A-Za-z][A-Za-z0-9+#&'’.\-]*[A-Za-z0-9+#]|[A-Za-z]/g;
+const NUM_RE = /\d+(?:[.,]\d+)*/g;
+const numCore = n => n.replace(/,/g, '');
+const cleanWord = w => w.replace(/['’]s$/i, '').toLowerCase();
+function buildSource(){
+  const text = [S.cv].concat(Object.values(S.answers), [...S.confirmedRaw]).join('\n');
+  const words = new Set();
+  (text.match(WORD_RE) || []).forEach(w => {
+    const c = cleanWord(w);
+    words.add(c);
+    c.split(/[-./]/).forEach(p => { if (p) words.add(p); });
+  });
+  const nums = new Set((text.match(NUM_RE) || []).map(numCore));
+  return { words, nums };
+}
+function wordKnown(w, src){
+  const c = cleanWord(w);
+  if (src.words.has(c)) return true;
+  const parts = c.split(/[-./]/).filter(Boolean);
+  return parts.length > 1 && parts.every(p => src.words.has(p));
+}
+function findFlags(md){
+  const src = buildSource(), flags = [];
+  let section = '';
+  md.split('\n').forEach((raw, i) => {
+    const t = raw.trim();
+    if (!t) return;
+    if (/^##(?!#)/.test(t)){ section = t.replace(/^#+\s*/, '').toLowerCase(); return; }   // section headings
+    let body = t, sentence = false;
+    if (/^#{1,6}\s/.test(t)) body = t.replace(/^#+\s*/, '');                            // name, job titles
+    else if (/^[-*•]\s/.test(t)){ body = t.replace(/^[-*•]\s+/, ''); sentence = !/skill/.test(section); }
+    else sentence = /summary|profile|about/.test(section);
+    const bad = new Set();
+    (body.match(NUM_RE) || []).forEach(n => { if (!src.nums.has(numCore(n))) bad.add(n); });
+    const parts = sentence ? body.replace(/([.!?])\s+/g, '$1\u0000').split('\u0000') : [body];
+    parts.forEach(s => {
+      (s.match(WORD_RE) || []).forEach((w, k) => {
+        if (sentence && k === 0) return;                     // first word of a sentence
+        if (!/^[A-Z]/.test(w)) return;                       // only capitalised words
+        if (COMMON.has(cleanWord(w))) return;                // common words
+        if (!wordKnown(w, src)) bad.add(w);
+      });
+    });
+    if (bad.size) flags.push({ i, line: t, tokens: [...bad] });
+  });
+  return flags;
+}
+
+/* ---------- v0.6: review and approve ---------- */
+const propMd = $('propMd'), tick = $('tick'), approveBtn = $('approveBtn'), askInput = $('askAi'), askBtn = $('askBtn');
+function setPill(kind){
+  const p = $('reviewPill');
+  p.className = 'pill ' + kind;
+  p.textContent = kind === 'ok' ? 'Approved ✓' : 'Not approved · not saved';
+}
+function openProposal(md){
+  S.pending = true;
+  $('reviewTitle').textContent = 'Review round ' + (S.approvedCount + 1);
+  $('curLabel').textContent = S.approved ? 'Current CV · approved round ' + S.approvedRound : 'Current CV · original';
+  $('curMd').value = S.approved || S.cv;
+  propMd.value = md; propMd.disabled = false; propMd.placeholder = '';
+  tick.checked = false; tick.disabled = false;
+  askInput.disabled = false; askBtn.disabled = false;
+  setPill('pending');
+  hideMsg($('reviewMsg'));
+  renderFlags();
+  const card = $('reviewCard');
+  card.classList.add('show');
+  card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function closeProposal(){
+  S.pending = false;
+  $('reviewTitle').textContent = 'Round ' + S.approvedRound + ' approved';
+  $('curLabel').textContent = 'Current CV · approved round ' + S.approvedRound;
+  $('curMd').value = S.approved;
+  propMd.value = ''; propMd.disabled = true;
+  propMd.placeholder = 'Click Suggest improvements in step 8 to start the next round.';
+  tick.checked = false; tick.disabled = true;
+  askInput.value = ''; askInput.disabled = true; askBtn.disabled = true;
+  setPill('ok');
+  renderFlags();
+}
+async function makeProposal(btn, busyLabel, box){
+  hideMsg(box);
+  setBtnBusy(btn, true, busyLabel);
+  try {
+    const reqs = S.current.rows.map(r => '- [' + r.importance + '] ' + r.requirement + ' (matches now: ' + r.match + ')').join('\n');
+    const parts = [fence('JOB POST', S.job), fence('ORIGINAL CV', S.cv)];
+    if (S.approved) parts.push(fence('CURRENT APPROVED CV (round ' + S.approvedRound + ')', S.approved));
+    parts.push('REQUIREMENTS AND HOW THE CV MATCHES NOW:\n' + reqs);
+    parts.push("USER'S OWN ANSWERS:\n" + answersBlock());
+    parts.push(S.approved
+      ? 'TASK: Improve the CURRENT APPROVED CV further toward the job post. Keep what already works.'
+      : 'TASK: Rewrite the ORIGINAL CV toward the job post.');
+    const cv = normalizeCv(await callGemini(SYSTEM_REWRITE, parts.join('\n\n')));
+    if (!cv) throw new PlainError('Gemini sent back an empty CV. Click again.');
+    openProposal(cvToMd(cv));
+  } catch (e) {
+    showMsg(box, errText(e));
+  } finally {
+    setBtnBusy(btn, false);
+    syncButtons();
+  }
+}
+$('rewriteBtn').innerHTML = 'Write my honest CV ' + ARROW;
+$('rewriteBtn').addEventListener('click', () => makeProposal($('rewriteBtn'), 'Writing your honest CV…', $('rewriteMsg')));
+
+askBtn.addEventListener('click', async () => {
+  const box = $('reviewMsg'); hideMsg(box);
+  if (!S.pending) return;
+  const instr = askInput.value.trim();
+  if (!instr){ showMsg(box, 'Type what you want the AI to change.'); askInput.focus(); return; }
+  setBtnBusy(askBtn, true, 'Changing…');
+  try {
+    const parts = [fence("USER'S CHANGE REQUEST", instr), fence("PROPOSED CV (markdown, may include the user's own edits)", propMd.value), fence('ORIGINAL CV', S.cv)];
+    if (S.approved) parts.push(fence('CURRENT APPROVED CV', S.approved));
+    parts.push("USER'S OWN ANSWERS:\n" + answersBlock(), fence('JOB POST', S.job));
+    const cv = normalizeCv(await callGemini(SYSTEM_CHANGE, parts.join('\n\n')));
+    if (!cv) throw new PlainError('Gemini sent back an empty CV. Click again.');
+    propMd.value = cvToMd(cv);
+    askInput.value = '';
+    tick.checked = false;
+    renderFlags();
+    showMsg(box, 'Change made. Read the proposal again before you approve.', 'success');
+  } catch (e) {
+    showMsg(box, errText(e));
+  } finally {
+    setBtnBusy(askBtn, false);
+    askBtn.disabled = !S.pending;
+    syncButtons();
+  }
+});
+askInput.addEventListener('keydown', e => { if (e.key === 'Enter') askBtn.click(); });
+
+let flagTimer;
+function scheduleFlags(){ clearTimeout(flagTimer); flagTimer = setTimeout(renderFlags, 250); }
+propMd.addEventListener('input', scheduleFlags);
+function highlight(node, text, tokens){
+  const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const re = new RegExp('(' + tokens.slice().sort((a, b) => b.length - a.length).map(esc).join('|') + ')', 'g');
+  text.split(re).forEach((part, k) => { if (part) node.appendChild(k % 2 ? el('mark', null, part) : document.createTextNode(part)); });
+}
+function removeLine(f){
+  const lines = propMd.value.split('\n');
+  let j = (lines[f.i] !== undefined && lines[f.i].trim() === f.line) ? f.i : lines.findIndex(l => l.trim() === f.line);
+  if (j >= 0) lines.splice(j, 1);
+  propMd.value = lines.join('\n');
+  renderFlags();
+}
+function renderFlags(){
+  const box = $('flags'); box.innerHTML = '';
+  S.flags = S.pending ? findFlags(propMd.value) : [];
+  const n = S.flags.length, chip = $('flagCount');
+  if (!S.pending){
+    chip.textContent = ''; chip.className = 'chip';
+    box.appendChild(el('p', 'small-note', 'The honesty check runs on every new proposal.'));
+    syncButtons();
+    return;
+  }
+  chip.textContent = n ? n + (n === 1 ? ' flag open' : ' flags open') : 'All clear';
+  chip.className = 'chip ' + (n ? 'warn' : 'good');
+  if (!n) box.appendChild(el('div', 'allclear', '✓ Every number and name in the proposal is in your CV or your answers.'));
+  S.flags.forEach(f => {
+    const item = el('div', 'flag');
+    const line = el('div', 'flag-line'); highlight(line, f.line, f.tokens); item.appendChild(line);
+    item.appendChild(el('div', 'flag-why', 'Not in your CV or your answers: ' + f.tokens.join(', ')));
+    const acts = el('div', 'flag-actions');
+    const rm = el('button', 'btn2 sm danger', 'Remove'); rm.type = 'button';
+    rm.addEventListener('click', () => removeLine(f));
+    const keep = el('button', 'btn2 sm', 'Keep (it is true)'); keep.type = 'button';
+    keep.addEventListener('click', () => { f.tokens.forEach(t => S.confirmedRaw.add(t)); renderFlags(); });
+    acts.append(rm, keep);
+    item.appendChild(acts);
+    box.appendChild(item);
+  });
+  syncButtons();
+}
+tick.addEventListener('change', syncButtons);
+
+approveBtn.addEventListener('click', async () => {
+  const box = $('reviewMsg'); hideMsg(box);
+  if (!S.pending) return;
+  const md = propMd.value.replace(/\s+$/, '');
+  if (!md.trim()){ showMsg(box, 'The proposed CV is empty.'); return; }
+  renderFlags();
+  if (S.flags.length){ showMsg(box, 'Clear the honesty flags first: click Remove or Keep (it is true) on each one.'); return; }
+  if (!tick.checked){ showMsg(box, 'Tick the box first: every line is true and you can explain it in an interview.'); return; }
+  S.approvedCount += 1;
+  S.approved = md;
+  S.approvedRound = S.approvedCount;
+  S.history.unshift({ round: S.approvedRound, md, time: new Date(), rows: null, score: null });
+  S.history = S.history.slice(0, MAX_ROUNDS);
+  closeProposal();
+  showMsg(box, 'Approved and saved as round ' + S.approvedRound + '.', 'success');
+  $('afterCard').classList.add('show');
+  $('downloadCard').classList.add('show');
+  await scoreApproved();
+});
+
+/* ---------- v0.5/0.6: re-score the approved CV with the same rules ---------- */
+async function scoreApproved(){
+  const btn = $('improveBtn'), box = $('afterMsg');
+  hideMsg(box);
+  S.unscored = true;
+  renderAfter();
+  syncButtons();
+  $('afterCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  setBtnBusy(btn, true, 'Scoring your approved CV…');
+  try {
+    const plain = mdToPlain(S.approved);
+    const user = 'REQUIREMENTS (keep this exact list and order):\n' + JSON.stringify(S.base, null, 1) + '\n\n' + fence('CV', plain);
+    const data = await callGemini(SYSTEM_RESCORE, user);
+    const got = data && Array.isArray(data.requirements) ? data.requirements : null;
+    if (!got) throw new PlainError('Gemini’s reply had no list of requirements. Click Score my approved CV.');
+    if (got.length !== S.base.length) throw new PlainError('Gemini returned ' + got.length + ' requirements instead of ' + S.base.length + '. Click Score my approved CV.');
+    const merged = S.base.map((b, i) => ({ requirement: b.requirement, importance: b.importance, match: got[i] && got[i].match, evidence: got[i] && got[i].evidence }));
+    const rows = checkRequirements(merged, plain);
+    S.current = Object.assign({ rows }, scoreOf(rows));
+    S.unscored = false;
+    const h = S.history.find(x => x.round === S.approvedRound);
+    if (h){ h.rows = rows; h.score = S.current.score; }
+    renderAfter();
+    renderQuestions();
+  } catch (e) {
+    showMsg(box, errText(e));
+  } finally {
+    setBtnBusy(btn, false);
+    syncButtons();
+  }
+}
+function renderAfter(){
+  setRing($('ringBefore'), S.before.score);
+  if (S.unscored){
+    setRing($('ringAfter'), null);
+    $('afterSub').textContent = 'Round ' + S.approvedRound + ' approved. Not scored yet.';
+    $('afterVerdictBox').hidden = true;
+    $('cmpWrap').hidden = true;
+    renderHistory();
+    return;
+  }
+  const a = S.current, v = verdictOf(a.score), delta = a.score - S.before.score;
+  setRing($('ringAfter'), a.score);
+  $('afterSub').textContent = 'Round ' + S.approvedRound + ' approved. Scored with the same rules as step 5.';
+  $('afterVerdictBox').hidden = false;
+  $('cmpWrap').hidden = false;
+  const verdict = $('afterVerdict');
+  verdict.className = 'verdict v-' + v.cls;
+  verdict.textContent = v.label;
+  $('afterLine').textContent = v.line;
+  const quotes = a.rows.filter(r => r.quote).length, found = a.rows.filter(r => r.quoteStatus === 'found').length;
+  const lowered = a.rows.filter(r => r.match !== r.aiMatch).length;
+  const stats = $('afterStats'); stats.innerHTML = '';
+  [
+    [(delta > 0 ? '+' : '') + delta, ' since before'],
+    [fmt(a.earned) + ' / ' + a.possible, ' points'],
+    [found + ' of ' + quotes, ' quotes found in your approved CV'],
+    [lowered, lowered === 1 ? ' match lowered' : ' matches lowered']
+  ].forEach(([b, t]) => { const s = el('span', 'stat'); s.appendChild(el('b', null, String(b))); s.appendChild(document.createTextNode(t)); stats.appendChild(s); });
+  const body = $('cmpBody'); body.innerHTML = '';
+  S.base.forEach((b, i) => {
+    const br = S.before.rows[i], ar = a.rows[i];
+    const tr = el('tr');
+    tr.appendChild(el('td', 'req', b.requirement));
+    const t = el('td', 'type'); t.appendChild(el('span', 'tag ' + b.importance, b.importance === 'must' ? 'Must' : 'Nice')); tr.appendChild(t);
+    const bm = el('td', 'match'); bm.appendChild(el('span', 'tag ' + br.match, 'Before: ' + cap(br.match))); tr.appendChild(bm);
+    const am = el('td', 'match'); am.appendChild(el('span', 'tag ' + ar.match, 'After: ' + cap(ar.match)));
+    if (ar.match !== ar.aiMatch) am.appendChild(el('span', 'was', 'Gemini said ' + cap(ar.aiMatch) + (ar.quoteStatus === 'missing' ? '. Quote not in CV.' : '. No quote given.')));
+    tr.appendChild(am);
+    const p = el('td', 'proof');
+    if (ar.quote){
+      p.appendChild(el('q', 'quote' + (ar.quoteStatus === 'missing' ? ' bad' : ''), ar.quote));
+      p.appendChild(ar.quoteStatus === 'found' ? el('span', 'qstat ok', '✓ Found in your approved CV') : el('span', 'qstat bad', '✗ Not found in your approved CV'));
+    } else p.appendChild(el('span', 'qstat none', 'No proof in your approved CV'));
+    tr.appendChild(p);
+    body.appendChild(tr);
+  });
+  renderHistory();
+}
+function renderHistory(){
+  const box = $('history'); box.innerHTML = '';
+  S.history.forEach(h => {
+    const row = el('div', 'hist');
+    row.appendChild(el('b', null, 'Round ' + h.round));
+    const when = h.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    row.appendChild(el('span', 'meta', (h.score == null ? 'Not scored' : 'Score ' + h.score) + ' · ' + when + (h.round === S.approvedRound ? ' · current' : '')));
+    const acts = el('div', 'acts');
+    const pre = el('pre', 'hist-md', h.md); pre.hidden = true;
+    const view = el('button', 'btn2 sm', 'View'); view.type = 'button';
+    view.addEventListener('click', () => { pre.hidden = !pre.hidden; view.textContent = pre.hidden ? 'View' : 'Hide'; });
+    acts.appendChild(view);
+    if (h.round !== S.approvedRound){
+      const use = el('button', 'btn2 sm', 'Use this version'); use.type = 'button';
+      use.disabled = S.pending;
+      use.addEventListener('click', () => useVersion(h));
+      acts.appendChild(use);
+    }
+    row.append(acts, pre);
+    box.appendChild(row);
+  });
+}
+function useVersion(h){
+  if (S.pending) return;
+  S.approved = h.md;
+  S.approvedRound = h.round;
+  if (h.rows){ S.current = Object.assign({ rows: h.rows }, scoreOf(h.rows)); S.unscored = false; }
+  else S.unscored = true;
+  closeProposal();
+  renderAfter();
+  renderQuestions();
+  syncButtons();
+}
+$('improveBtn').addEventListener('click', () => {
+  if (S.pending) return;
+  if (S.unscored) scoreApproved();
+  else makeProposal($('improveBtn'), 'Suggesting improvements…', $('afterMsg'));
+});
+
+function syncButtons(){
+  const busy = b => b.classList.contains('busy');
+  if (!busy(approveBtn)) approveBtn.disabled = !S.pending || !tick.checked;
+  const imp = $('improveBtn');
+  if (!busy(imp)){
+    imp.disabled = S.pending;
+    imp.innerHTML = (S.unscored ? 'Score my approved CV ' : 'Suggest improvements ') + ARROW;
+  }
+  $('improveNote').textContent = S.pending ? 'Approve or keep editing the proposal in step 7 first.' : '';
+  $('rewriteBtn').hidden = S.approvedCount > 0;
+  $('gapsNote').hidden = S.approvedCount === 0;
+  updateDownload();
+}
+
+/* ---------- v0.7: download as Word ---------- */
+function cvFileName(md){
+  const m = String(md || '').match(/^\s*#\s+(.+)$/m);
+  const base = m ? m[1].trim().replace(/[^\p{L}\p{N}\s-]/gu, '').trim().replace(/[\s-]+/g, '_') : '';
+  return (base || 'My') + '_CV.docx';
+}
+function openFlagCount(){
+  return { pending: S.pending ? findFlags(propMd.value).length : 0, approved: S.approved ? findFlags(S.approved).length : 0 };
+}
+function updateDownload(){
+  const btn = $('downloadBtn'), note = $('fileNote');
+  if (btn.classList.contains('busy')) return;
+  if (!S.approved){ btn.disabled = true; note.className = 'file-note'; note.textContent = 'Approve a version in step 7 first.'; return; }
+  const f = openFlagCount(), n = f.pending + f.approved;
+  btn.disabled = n > 0;
+  note.className = 'file-note' + (n ? ' blocked' : '');
+  if (f.pending) note.textContent = 'Blocked: ' + n + (n === 1 ? ' honesty flag is' : ' honesty flags are') + ' open. Clear them in step 7.';
+  else if (f.approved) note.textContent = 'Blocked: your approved CV now has ' + f.approved + ' honesty flag' + (f.approved === 1 ? '' : 's') + ' (an answer may have changed). Click Suggest improvements and fix it in the next round.';
+  else note.textContent = 'File: ' + cvFileName(S.approved) + ' · approved round ' + S.approvedRound;
+}
+function buildDocx(md){
+  const D = window.docx;
+  const ACCENT = '4F46E5', NAVY = '0B1F4D', GREY = '5F6368';
+  const P = (runs, opt) => new D.Paragraph(Object.assign({ children: runs }, opt || {}));
+  const R = (text, opt) => new D.TextRun(Object.assign({ text }, opt || {}));
+  const kids = [];
+  let section = '', headerLine = 0, afterTitle = false, skills = [];
+  const flushSkills = () => {
+    if (skills.length){ kids.push(P([R(skills.join('  ·  '))], { spacing: { after: 60 } })); skills = []; }
+  };
+  md.split('\n').forEach(raw => {
+    const t = raw.trim();
+    if (!t) return;
+    if (/^#\s/.test(t)){
+      flushSkills();
+      kids.push(P([R(t.replace(/^#\s+/, ''), { bold: true, size: 52, color: NAVY })], { spacing: { after: 40 } }));
+      headerLine = 1; return;
+    }
+    if (/^##(?!#)/.test(t)){
+      flushSkills();
+      section = t.replace(/^#+\s*/, '');
+      headerLine = 0; afterTitle = false;
+      kids.push(P([R(section.toUpperCase(), { bold: true, size: 21, color: ACCENT })], {
+        spacing: { before: 260, after: 100 },
+        border: { bottom: { style: D.BorderStyle.SINGLE, size: 6, color: ACCENT, space: 2 } }
+      }));
+      return;
+    }
+    if (/^#{3,6}\s/.test(t)){
+      flushSkills();
+      kids.push(P([R(t.replace(/^#+\s*/, ''), { bold: true, size: 23, color: NAVY })], { spacing: { before: 160, after: 20 } }));
+      afterTitle = true; return;
+    }
+    const isBullet = /^[-*•]\s+/.test(t);
+    const text = t.replace(/^[-*•]\s+/, '');
+    if (isBullet && /skill/i.test(section)){ skills.push(text); return; }
+    flushSkills();
+    if (headerLine > 0 && !section){
+      kids.push(headerLine === 1
+        ? P([R(text, { size: 24, color: ACCENT })], { spacing: { after: 40 } })
+        : P([R(text, { size: 19, color: GREY })], { spacing: { after: 40 } }));
+      headerLine++; return;
+    }
+    if (afterTitle && !isBullet){
+      kids.push(P([R(text, { italics: true, size: 19, color: GREY })], { spacing: { after: 60 } }));
+      afterTitle = false; return;
+    }
+    afterTitle = false;
+    kids.push(isBullet
+      ? P([R(text)], { bullet: { level: 0 }, spacing: { after: 40 } })
+      : P([R(text)], { spacing: { after: 80 } }));
+  });
+  flushSkills();
+  return new D.Document({
+    creator: 'urjob',
+    title: cvFileName(md).replace(/\.docx$/, ''),
+    styles: { default: { document: { run: { font: 'Calibri', size: 21, color: '1D1D1F' } } } },
+    sections: [{
+      properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1000, right: 1100, bottom: 1000, left: 1100 } } },
+      children: kids
+    }]
+  });
+}
+$('downloadBtn').addEventListener('click', async () => {
+  const box = $('downloadMsg'), btn = $('downloadBtn');
+  hideMsg(box);
+  if (!S.approved){ showMsg(box, 'Approve a version in step 7 first.'); return; }
+  const f = openFlagCount();
+  if (f.pending + f.approved){ showMsg(box, 'Download blocked: honesty flags are still open.'); updateDownload(); return; }
+  if (!window.docx){ showMsg(box, 'Could not load the Word builder. Check your internet and reload the page.'); return; }
+  setBtnBusy(btn, true, 'Building your Word file…');
+  try {
+    const blob = await docx.Packer.toBlob(buildDocx(S.approved));
+    const name = cvFileName(S.approved);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    showMsg(box, 'Downloaded ' + name + '.', 'success');
+  } catch (e) {
+    showMsg(box, 'Could not build the Word file: ' + e.message);
+  } finally {
+    setBtnBusy(btn, false);
+    updateDownload();
+  }
+});
+
+resetFlow('', '');
+renderFlags();
+
+/* ---------- page entrance ---------- */
+const io = new IntersectionObserver(entries => entries.forEach(e => {
+  if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
+}), { threshold: .12 });
+let revealed = false;
+function revealPage(){
+  if (revealed) return; revealed = true;
+  document.body.classList.remove('intro-on');
+  let k = 0;
+  document.querySelectorAll('.rise').forEach(el => {
+    if (el.getBoundingClientRect().top < innerHeight){
+      el.style.setProperty('--d', (k++ * 110) + 'ms');
+      el.classList.add('in');
+    } else io.observe(el);
+  });
+}
+
+/* ---------- intro ---------- */
+(function intro(){
+  const intro = document.getElementById('intro');
+  const $ = id => document.getElementById(id);
+  const cluster = $('cluster'), dark = $('dark'), ring = $('ring'), glow = $('glow');
+  const logo = $('ilogo'), word = $('iword'), tag = $('itag'), skip = $('skip');
+  const letters = [...word.querySelectorAll('.ch')];
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const timers = [];
+  const at = (ms, fn) => timers.push(setTimeout(fn, ms));
+  const anim = (el, kf, opt) => el.animate(kf, Object.assign({ fill: 'both' }, opt));
+  const OUT = 'cubic-bezier(.16,1,.3,1)', IO = 'cubic-bezier(.65,0,.35,1)';
+
+  let closing = false;
+  function close(fast){
+    if (closing) return; closing = true;
+    timers.forEach(clearTimeout);
+    document.removeEventListener('keydown', onKey);
+    const a = intro.animate(
+      [{ opacity: 1, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(1.04)' }],
+      { duration: fast ? 500 : 1100, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' });
+    setTimeout(revealPage, fast ? 60 : 120);
+    a.onfinish = () => intro.remove();
+  }
+  function onKey(e){ if (e.key === 'Escape') close(true); }
+  skip.addEventListener('click', () => close(true));
+  document.addEventListener('keydown', onKey);
+  at(500, () => skip.classList.add('show'));
+
+  /* the blackout circle must cover the whole screen */
+  const vw = innerWidth, vh = innerHeight;
+  const D = Math.ceil(Math.hypot(vw, vh)) + 40;
+  [dark, ring].forEach(e => { e.style.width = e.style.height = D + 'px'; e.style.marginLeft = e.style.marginTop = (-D / 2) + 'px'; });
+
+  const HOLD = 6000;
+
+  if (reduce){
+    /* calm version: no movement, same 6 second hold */
+    cluster.remove(); ring.remove();
+    dark.style.transform = 'scale(1)';
+    intro.classList.add('isdark');
+    logo.querySelectorAll('.draw').forEach(p => p.style.strokeDashoffset = 0);
+    const fadeIn = el => anim(el, [{ opacity: 0 }, { opacity: 1 }], { delay: 200, duration: 900 });
+    [logo, tag, ...letters].forEach(fadeIn);
+    anim(glow, [{ opacity: 0, transform: 'translate(-50%,-50%) scale(1)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1)' }], { delay: 200, duration: 900 });
+    const end = 1100 + HOLD;
+    [logo, tag, glow, ...letters].forEach(el => el.animate([{ opacity: 1 }, { opacity: 0 }], { delay: end, duration: 800, fill: 'forwards' }));
+    at(end + 800, () => close(false));
+    return;
+  }
+
+  /* 1. job icons clubbed together */
+  const ICONS = [
+    '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 13h18"/>',               // briefcase
+    '<rect x="4" y="5" width="16" height="11" rx="1.5"/><path d="M2 19h20"/>',                                                                 // laptop
+    '<path d="m8 8-4 4 4 4"/><path d="m16 8 4 4-4 4"/><path d="m14 5-4 14"/>',                                                                // code
+    '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>', // wrench
+    '<path d="M3 3v18h18"/><path d="M8 16v-4"/><path d="M13 16V8"/><path d="M18 16v-7"/>',                                                    // chart
+    '<path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/><path d="m15 5 4 4"/>',                                                      // pencil
+    '<path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>',                                                             // graduation cap
+    '<path d="M3 8a2 2 0 0 1 2-2h2l2-3h6l2 3h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="4"/>',            // camera
+    '<rect x="3" y="3" width="18" height="18" rx="4"/><path d="M12 8v8"/><path d="M8 12h8"/>',                                                // medical
+    '<path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6z"/><path d="M6 17h12"/>', // chef hat
+    '<path d="M12 3a9 9 0 1 0 0 18c1 0 1.5-.8 1.5-1.6 0-.9-.6-1.3-.6-2.1 0-.9.7-1.3 1.6-1.3H17a4 4 0 0 0 4-4c0-5-4-9-9-9z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10.5" cy="7" r="1"/><circle cx="15.5" cy="8" r="1"/>', // palette
+    '<path d="M3 11v2a1 1 0 0 0 1 1h3l6 4V6L7 10H4a1 1 0 0 0-1 1z"/><path d="M17 9a4 4 0 0 1 0 6"/><path d="M19.5 6.5a8 8 0 0 1 0 11"/>',      // megaphone
+    '<path d="M2 6h11v10H2z"/><path d="M13 9h4l4 4v3h-8"/><circle cx="6" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>',                    // truck
+    '<path d="M4 4.5A1.5 1.5 0 0 1 5.5 3H20v15H5.5A1.5 1.5 0 0 0 4 19.5z"/><path d="M4 19.5A1.5 1.5 0 0 0 5.5 21H20v-3"/>',                    // book
+    '<path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z"/>',            // idea
+    '<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18z"/>',                                 // globe
+    '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M6 16c.5-1.5 1.7-2 3-2s2.5.5 3 2"/><path d="M14 10h4"/><path d="M14 14h4"/>', // ID badge
+    '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8"/><path d="M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/>', // calculator
+    '<path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/>',                                              // music
+    '<path d="M5 8h14l-1 13H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>'                                                                          // retail bag
+  ];
+  const t = vw < 520 ? 56 : 72;
+  cluster.style.setProperty('--t', t + 'px');
+  const T = (x, y, r, s) => `translate(${x}px,${y}px) rotate(${r}deg) scale(${s})`;
+  const reach = Math.hypot(vw, vh);
+  const GOLDEN = 2.39996;
+
+  ICONS.forEach((inner, i) => {
+    const el = document.createElement('div');
+    el.className = 'tile' + (i % 4 === 1 ? ' alt' : '');
+    el.innerHTML = '<svg viewBox="0 0 24 24">' + inner + '</svg>';
+    el.style.zIndex = ICONS.length - i;
+    cluster.appendChild(el);
+
+    const ang = i === 0 ? Math.random() * Math.PI * 2 : i * GOLDEN;
+    const rad = t * 0.42 * Math.sqrt(i);
+    const x0 = Math.cos(ang) * rad, y0 = Math.sin(ang) * rad, r0 = Math.random() * 24 - 12;
+    const R = reach * (0.42 + Math.random() * 0.3);
+    const x1 = Math.cos(ang) * R, y1 = Math.sin(ang) * R, r1 = r0 + (Math.random() * 160 - 80);
+
+    const d = 100 + i * 28;               // staggered pop in
+    const end = 2950;                     // all fly out together
+    const total = end - d;
+    const off = ms => (ms - d) / total;
+    anim(el, [
+      { offset: 0,             transform: T(x0, y0, r0, 0),   easing: 'cubic-bezier(.34,1.56,.64,1)' },
+      { offset: off(d + 480),  transform: T(x0, y0, r0, 1) },
+      { offset: off(1150),     transform: T(x0, y0, r0, 1),   easing: 'cubic-bezier(.5,0,.75,0)' },
+      { offset: off(1450),     transform: T(x0 * .7, y0 * .7, r0 * .5, .9), easing: 'cubic-bezier(.22,.7,.3,1)' },   // squeeze tighter
+      { offset: 1,             transform: T(x1, y1, r1, 1.75) }                              // burst outward
+    ], { delay: d, duration: total });
+    anim(el, [{ opacity: 0 }, { opacity: 1 }], { delay: d, duration: 260 });
+    el.animate([{ opacity: 1 }, { opacity: 0 }], { delay: 2350, duration: 600, easing: 'ease-in', fill: 'forwards' });
+  });
+
+  /* 2. expand and black out the screen */
+  anim(dark, [{ transform: 'scale(0)' }, { transform: 'scale(1)' }], { delay: 1460, duration: 1150, easing: 'cubic-bezier(.45,0,.2,1)' });
+  anim(ring, [
+    { transform: 'scale(0)',   opacity: 1 },
+    { transform: 'scale(.6)',  opacity: 1, offset: .6 },
+    { transform: 'scale(1)',   opacity: 0 }
+  ], { delay: 1460, duration: 1150, easing: 'cubic-bezier(.45,0,.2,1)' });
+  at(2500, () => intro.classList.add('isdark'));
+  ['o1', 'o2'].forEach(id => anim($(id), [{ opacity: 0 }, { opacity: 1 }], { delay: 2500, duration: 1600, easing: 'ease-out' }));
+
+  /* 3. logo and name appear */
+  anim(glow, [
+    { opacity: 0, transform: 'translate(-50%,-50%) scale(.4)' },
+    { opacity: 1, transform: 'translate(-50%,-50%) scale(1)' }
+  ], { delay: 2600, duration: 1600, easing: OUT });
+  glow.animate([{ opacity: 1 }, { opacity: .6 }], { delay: 4200, duration: 2600, iterations: Infinity, direction: 'alternate', easing: 'ease-in-out' });
+  anim(logo, [
+    { opacity: 0, transform: 'scale(.6)', filter: 'blur(18px)' },
+    { opacity: 1, transform: 'scale(1)',  filter: 'blur(0px)' }
+  ], { delay: 2600, duration: 1200, easing: OUT });
+  anim($('lu'), [{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { delay: 2950, duration: 900, easing: IO });
+  anim($('la'), [{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { delay: 3650, duration: 500, easing: OUT });
+  letters.forEach((ch, i) => anim(ch, [
+    { opacity: 0, transform: 'translateY(45%) scale(.96)', filter: 'blur(14px)' },
+    { opacity: 1, transform: 'translateY(0) scale(1)',     filter: 'blur(0px)' }
+  ], { delay: 3050 + i * 85, duration: 1100, easing: OUT }));
+  anim(tag, [{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'translateY(0)' }], { delay: 3750, duration: 1000, easing: OUT });
+
+  /* 4. hold for 6 seconds */
+  const SHOWN = 4600;
+  at(SHOWN, () => word.classList.add('sheen'));
+  const EXIT = SHOWN + HOLD;
+
+  /* 5. text fades away, then the page flows in */
+  const EASE = 'cubic-bezier(.4,0,.2,1)';
+  letters.forEach((ch, i) => ch.animate([
+    { opacity: 1, transform: 'translateY(0)',    filter: 'blur(0px)' },
+    { opacity: 0, transform: 'translateY(-25%)', filter: 'blur(12px)' }
+  ], { delay: EXIT + i * 70, duration: 850, easing: EASE, fill: 'forwards' }));
+  tag.animate([{ opacity: 1, transform: 'translateY(0)' }, { opacity: 0, transform: 'translateY(-8px)' }], { delay: EXIT + 50, duration: 700, easing: EASE, fill: 'forwards' });
+  logo.animate([
+    { opacity: 1, transform: 'scale(1)',    filter: 'blur(0px)' },
+    { opacity: 0, transform: 'scale(1.12)', filter: 'blur(14px)' }
+  ], { delay: EXIT + 250, duration: 900, easing: EASE, fill: 'forwards' });
+  glow.animate([
+    { opacity: .8, transform: 'translate(-50%,-50%) scale(1)' },
+    { opacity: 0,  transform: 'translate(-50%,-50%) scale(1.3)' }
+  ], { delay: EXIT + 200, duration: 1000, easing: EASE, fill: 'forwards' });
+  at(EXIT + 1000, () => close(false));
+})();
+</script>
+</body>
+</html>
