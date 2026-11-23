@@ -754,6 +754,25 @@
     <div class="msg" id="downloadMsg"></div>
   </section>
 
+  <section class="card rise" id="contactCard">
+    <div class="step-head">
+      <div class="num">?</div>
+      <div class="step-title"><h2>Ask us a question</h2><p>We reply by email within one working day.</p></div>
+    </div>
+    <form id="contactForm" novalidate>
+      <div class="field">
+        <label class="label" for="contactEmail">Your email</label>
+        <input class="input" id="contactEmail" type="email" readonly>
+      </div>
+      <div class="field" style="margin-top:14px">
+        <label class="label" for="contactMsg">Your question</label>
+        <textarea id="contactMsg" placeholder="Type your question here..." required></textarea>
+      </div>
+      <button class="btn" id="contactBtn" type="submit" style="margin-top:14px">Send</button>
+      <div id="contactStatus" role="status" aria-live="polite" style="margin-top:12px;font-size:15px;min-height:1.2em"></div>
+    </form>
+  </section>
+
   <footer class="rise"><b>urjob</b> · Apply smarter. Stay honest.</footer>
 </main>
 
@@ -806,6 +825,33 @@
     resendBtn.addEventListener('click', () => { if (pending) sendCode(pending); });
     email.addEventListener('input', () => { if (email.value.trim() !== pending) codeStep.hidden = true; });
     out.addEventListener('click', async () => { await sb.auth.signOut(); setSignedIn(false); say(''); });
+  }
+})();
+</script>
+<script>
+/* ---------- contact form (Supabase submissions + email) ---------- */
+(function(){
+  const SB_URL = "https://jwgegmmhorctuypectvt.supabase.co", SB_KEY = "sb_publishable_I3er-2xsik5S5GED5_HoHw_9nhaOv1f";
+  window.addEventListener('DOMContentLoaded', init);
+  function init(){
+    if (!window.supabase) return;
+    const sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, detectSessionInUrl: true } });
+    const em = document.getElementById('contactEmail'), ta = document.getElementById('contactMsg');
+    const st = document.getElementById('contactStatus'), btn = document.getElementById('contactBtn');
+    const form = document.getElementById('contactForm');
+    function fill(session){ if (session && session.user) em.value = session.user.email || ''; }
+    sb.auth.getSession().then(r => fill(r.data && r.data.session));
+    sb.auth.onAuthStateChange((_e, session) => fill(session));
+    form.addEventListener('submit', async ev => {
+      ev.preventDefault();
+      const m = ta.value.trim();
+      if (!m){ st.textContent = 'Type your question first.'; st.style.color = '#b91c1c'; return; }
+      btn.disabled = true; st.textContent = 'Sending...'; st.style.color = '#6e6e73';
+      const { error } = await sb.from('submissions').insert({ email: em.value, message: m });
+      btn.disabled = false;
+      if (error){ st.textContent = 'Could not send. Try again.'; st.style.color = '#b91c1c'; }
+      else { st.textContent = 'Sent! Check your inbox for our confirmation email.'; st.style.color = '#047857'; ta.value = ''; }
+    });
   }
 })();
 </script>
