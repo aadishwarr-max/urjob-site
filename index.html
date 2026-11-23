@@ -490,6 +490,7 @@
   #authMsg{margin-top:12px;font-size:15px;color:var(--muted);min-height:1.2em}
   #authMsg.err{color:#b91c1c}
   #authMsg.ok{color:#047857}
+  #codeStep[hidden]{display:none}
   #signOut{display:none;margin-left:12px;font-size:14px;background:none;border:0;color:var(--muted);cursor:pointer;text-decoration:underline}
   body:not(.locked) #signOut.on{display:inline}
 </style>
@@ -553,14 +554,22 @@
   <section class="card rise" id="authGate">
     <div class="step-head">
       <div class="num">&rarr;</div>
-      <div class="step-title"><h2>Sign in</h2><p>Enter your email. We send you a sign-in link.</p></div>
+      <div class="step-title"><h2>Sign in</h2><p>Enter your email. We send you a code.</p></div>
     </div>
     <form id="authForm" novalidate>
       <div class="field">
         <label class="label" for="authEmail">Email</label>
         <input class="input" id="authEmail" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com" required>
       </div>
-      <button class="btn" id="authBtn" type="submit">Email me a sign-in link</button>
+      <button class="btn" id="authBtn" type="submit">Email me a code</button>
+      <div id="codeStep" hidden>
+        <div class="field" style="margin-top:14px">
+          <label class="label" for="authCode">Code from your email</label>
+          <input class="input" id="authCode" type="text" autocomplete="one-time-code" inputmode="numeric" maxlength="10" placeholder="Enter the code">
+        </div>
+        <button class="btn" id="verifyBtn" type="button">Verify and sign in</button>
+        <button class="linkbtn" id="resendBtn" type="button" style="margin-top:10px">Send a new code</button>
+      </div>
       <div id="authMsg" role="status" aria-live="polite"></div>
     </form>
   </section>
@@ -766,16 +775,36 @@
       setSignedIn(!!session);
       if (session && location.hash.includes('access_token')) history.replaceState(null, '', location.pathname);
     });
-    form.addEventListener('submit', async ev => {
+    let pending = '';
+    const codeStep = document.getElementById('codeStep'), code = document.getElementById('authCode');
+    const verifyBtn = document.getElementById('verifyBtn'), resendBtn = document.getElementById('resendBtn');
+    async function sendCode(v){
+      btn.disabled = true; resendBtn.disabled = true; say('Sending...');
+      const { error } = await sb.auth.signInWithOtp({ email: v, options: { shouldCreateUser: true } });
+      btn.disabled = false; resendBtn.disabled = false;
+      if (error){ say(error.message || 'Could not send the code. Try again.', 'err'); return; }
+      pending = v; codeStep.hidden = false; code.value = ''; code.focus();
+      say('Check your inbox for the code and type it below.', 'ok');
+    }
+    form.addEventListener('submit', ev => {
       ev.preventDefault();
+      if (!codeStep.hidden && pending && email.value.trim() === pending && code.value.trim()){ verify(); return; }
       const v = email.value.trim();
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)){ say('Enter a valid email address.', 'err'); return; }
-      btn.disabled = true; say('Sending...');
-      const { error } = await sb.auth.signInWithOtp({ email: v, options: { emailRedirectTo: location.origin + location.pathname } });
-      btn.disabled = false;
-      if (error) say(error.message || 'Could not send the link. Try again.', 'err');
-      else say('Check your inbox for the sign-in link.', 'ok');
+      sendCode(v);
     });
+    async function verify(){
+      const t = code.value.replace(/\s+/g, '');
+      if (!/^\d{6,10}$/.test(t)){ say('Enter the digits from the email.', 'err'); return; }
+      verifyBtn.disabled = true; say('Checking...');
+      const { error } = await sb.auth.verifyOtp({ email: pending, token: t, type: 'email' });
+      verifyBtn.disabled = false;
+      if (error) say('That code did not work. Check it or send a new one.', 'err');
+      else { say(''); codeStep.hidden = true; code.value = ''; }
+    }
+    verifyBtn.addEventListener('click', verify);
+    resendBtn.addEventListener('click', () => { if (pending) sendCode(pending); });
+    email.addEventListener('input', () => { if (email.value.trim() !== pending) codeStep.hidden = true; });
     out.addEventListener('click', async () => { await sb.auth.signOut(); setSignedIn(false); say(''); });
   }
 })();
